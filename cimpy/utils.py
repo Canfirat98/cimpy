@@ -1,4 +1,6 @@
 import importlib
+import uuid
+import cimpy.cgmes_v2_4_15.TopologicalNode
 
 def node_breaker_to_bus_branch(import_result):
     """TODO: Add documentation
@@ -136,3 +138,111 @@ def add_external_network_injection(import_result, version, mRID, voltage_set_poi
     import_result['topology'] = res
 
     return import_result
+
+
+def add_ACLineSegment(import_result, version, mRID_1, mRID_2, r, x, bch, gch, name = 'ACLineSegment'):
+    res = import_result['topology']
+    TopologicalNode1 = ''
+    TopologicalNode2 = ''
+    if mRID_1 in res:
+        if 'TopologicalNode' in str(type(res[mRID_1])):
+            TopologicalNode1 = res[mRID_1]
+        elif 'ConnectivityNode' in str(type(res[mRID_1])):
+            TopologicalNode1 = res[mRID_1].TopologicalNode.mRID
+
+    if mRID_2 in res:
+        if 'TopologicalNode' in str(type(res[mRID_2])):
+            TopologicalNode2 = res[mRID_2]
+        elif 'ConnectivityNode' in str(type(res[mRID_2])):
+            TopologicalNode2 = res[mRID_2].TopologicalNode.mRID
+    
+
+    if TopologicalNode1 != '' and TopologicalNode2 != '':
+        terminal_name1 = 'Terminal_1_' + name 
+        terminal_name2 = 'Terminal_2_' + name 
+
+        #module_name = "cimpy." + version + ".Equipment."
+        module_name = "cimpy." + version + "."
+
+        terminal_module = importlib.import_module((module_name + 'Terminal'))
+        terminal_class = getattr(terminal_module, 'Terminal')
+        res[terminal_name1] = terminal_class(mRID=terminal_name1,
+                                            name=terminal_name1,
+                                            TopologicalNode=TopologicalNode1)
+        
+        res[terminal_name2] = terminal_class(mRID=terminal_name2,
+                                            name=terminal_name2,
+                                            TopologicalNode=TopologicalNode2)
+
+        ACLineSegment_module = importlib.import_module((module_name + 'ACLineSegment'))
+        ACLineSegment_class = getattr(ACLineSegment_module, 'ACLineSegment')
+        res[name] = ACLineSegment_class(mRID= name,
+                                        name= name,
+                                        r = r,
+                                        x = x,
+                                        bch = bch,
+                                        gch = gch,
+                                        Terminals = [res[terminal_name1], res[terminal_name2]])
+        res[terminal_name1].ConductingEquipment = res[name]
+        res[terminal_name2].ConductingEquipment = res[name]
+
+    if TopologicalNode1 == '':
+        print('No Terminal with first mRID ', mRID_1, ' found in object list!')
+
+    if TopologicalNode2 == '':
+        print('No Terminal with second mRID ', mRID_2, ' found in object list!')
+
+    import_result['topology'] = res
+
+    return import_result
+
+
+def add_Terminal(import_result, version, TopologicalNode, ConductingEquipment, pInjection = 0, qInjection = 0, mRID = ''):
+    res = import_result['topology']
+    
+    if mRID == "":
+        mRID = uuid.uuid1()
+
+    #module_name = "cimpy." + version + ".Equipment."
+    module_name = "cimpy." + version + "."
+
+    terminal_module = importlib.import_module((module_name + 'Terminal'))
+    terminal_class = getattr(terminal_module, 'Terminal')
+    res[mRID] = terminal_class(mRID='Terminal',
+                                name='Terminal',
+                                TopologicalNode=TopologicalNode,
+                                ConductingEquipment= ConductingEquipment,
+                                pInjection= pInjection,
+                                qInjection= qInjection)
+
+
+    import_result['topology'] = res
+
+    return import_result
+        
+def add_TopologicalNode(import_result, version, BaseVoltage, mRID = ""):
+    res = import_result['topology']
+    if mRID in res:
+        print("mRID", mRID, "is already included")
+        return import_result
+
+    # Creating random mRID using uuid1()
+    if mRID == "":
+        mRID = uuid.uuid1()
+
+    #module_name = "cimpy." + version + ".Equipment."
+    module_name = "cimpy." + version + "."
+
+    TopologicalNode_module = importlib.import_module((module_name + 'TopologicalNode'))
+    TopologicalNode_class = getattr(TopologicalNode_module, 'TopologicalNode')
+    res[mRID] = TopologicalNode_class(mRID= mRID,
+                                name= mRID,
+                                BaseVoltage= BaseVoltage)
+
+
+    import_result['topology'] = res
+
+    return import_result
+            
+
+
