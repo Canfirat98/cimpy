@@ -285,72 +285,43 @@ def add_SynchronousMachine(import_result, version, mRID, RotatingMachine, name =
     return import_result
 
 
-def add_SynchronousMachineTimeConstantReactance(import_result, version, mRID, SynchronousMachine, SynchronousMachineModelKind, damping, intertia, statorResistance, statorLeakageReactance, tpdo, tpqo, tppdo, tppqo, xDirectSubtrans, xDirectSync, xDirectTrans, xQuadSubtrans, xQuadSync, xQuadTrans, name= "SynchronousMachineTimeConstantReactance"):
+def extend_SynchronousMachineTimeConstantReactance(import_result, version, SynchronousMachineID, damping, intertia, statorResistance, statorLeakageReactance, tpdo, tpqo, tppdo, tppqo, xDirectSubtrans, xDirectSync, xDirectTrans, xQuadSubtrans, xQuadSync, xQuadTrans, name= "SynchronousMachineTimeConstantReactance"):
     res = import_result['topology']
-    TopologicalNode = ''
     
-    if mRID in res:
-        if 'TopologicalNode' in str(type(res[mRID])):
-            TopologicalNode = res[mRID]
-        elif 'ConnectivityNode' in str(type(res[mRID])):
-            TopologicalNode = res[mRID].TopologicalNode.mRID
+    #module_name = "cimpy." + version + ".Equipment."
+    module_name = "cimpy." + version + "."
 
-    if TopologicalNode != '':
-        terminal_name = 'Terminal_' + name 
-
-        #module_name = "cimpy." + version + ".Equipment."
-        module_name = "cimpy." + version + "."
-        
-        terminal_module = importlib.import_module((module_name + 'Terminal'))
-        terminal_class = getattr(terminal_module, 'Terminal')
-        res[terminal_name] = terminal_class(mRID=terminal_name,
-                                            name=terminal_name,
-                                            TopologicalNode=TopologicalNode)
-
-        SynchronousMachineDynamics_module = importlib.import_module((module_name + 'SynchronousMachineDynamics'))
-        SynchronousMachineDynamics_class = getattr(SynchronousMachineDynamics_module, 'SynchronousMachineDynamics')
-        SynchronousMachineDynamics = SynchronousMachineDynamics_class(mRID= "SynchronousMachineDynamics",
-                                        name= "SynchronousMachineDynamics",
-                                        SynchronousMachine= SynchronousMachine,
-                                        SynchronousMachineModelKind= SynchronousMachineModelKind)
-
-        RotatingMachineDynamics_module = importlib.import_module((module_name + 'RotatingMachineDynamics'))
-        RotatingMachineDynamics_class = getattr(RotatingMachineDynamics_module, 'RotatingMachineDynamics')
-        RotatingMachineDynamics = RotatingMachineDynamics_class(mRID= "RotatingMachineDynamics",
-                                        name= "RotatingMachineDynamics",
-                                        damping= damping,
-                                        intertia= intertia,
-                                        statorResistance= statorResistance,
-                                        statorLeakageReactance= statorLeakageReactance)
-        
-        SynchronousMachineTCR_module = importlib.import_module((module_name + 'SynchronousMachineTimeConstantReactance'))
-        SynchronousMachineTCR_class = getattr(SynchronousMachineTCR_module, 'SynchronousMachineTimeConstantReactance')
-        res[name] = SynchronousMachineTCR_class(mRID= name,
-                                        name= name,
-                                        SynchronousMachineDynamics= SynchronousMachineDynamics,
-                                        RotatingMachineDynamics= RotatingMachineDynamics,
-                                        tpdo= tpdo,
-                                        tpqo= tpqo,
-                                        tppdo= tppdo,
-                                        tppqo= tppqo,
-                                        xDirectSubtrans= xDirectSubtrans,
-                                        xDirectSync= xDirectSync,
-                                        xDirectTrans= xDirectTrans,
-                                        xQuadSubtrans= xQuadSubtrans,
-                                        xQuadSync= xQuadSync,
-                                        xQuadTrans= xQuadTrans,
-                                        Terminals = [res[terminal_name]])
-        
-        res[terminal_name].ConductingEquipment = res[name]
-    else:
-        print('No Terminal with mRID ', mRID, ' found in object list!')
-
+    RotatingMachineDynamics_module = importlib.import_module((module_name + 'RotatingMachineDynamics'))
+    RotatingMachineDynamics_class = getattr(RotatingMachineDynamics_module, 'RotatingMachineDynamics')
+    RotatingMachineDynamics = RotatingMachineDynamics_class(mRID= "RotatingMachineDynamics",
+                                    name= "RotatingMachineDynamics",
+                                    damping= damping,
+                                    intertia= intertia,
+                                    statorResistance= statorResistance,
+                                    statorLeakageReactance= statorLeakageReactance)
+    
+    SynchronousMachineTCR_module = importlib.import_module((module_name + 'SynchronousMachineTimeConstantReactance'))
+    SynchronousMachineTCR_class = getattr(SynchronousMachineTCR_module, 'SynchronousMachineTimeConstantReactance')
+    res[name] = SynchronousMachineTCR_class(mRID= name,
+                                    name= name,
+                                    SynchronousMachine = SynchronousMachineID,
+                                    RotatingMachineDynamics= RotatingMachineDynamics,
+                                    tpdo= tpdo,
+                                    tpqo= tpqo,
+                                    tppdo= tppdo,
+                                    tppqo= tppqo,
+                                    xDirectSubtrans= xDirectSubtrans,
+                                    xDirectSync= xDirectSync,
+                                    xDirectTrans= xDirectTrans,
+                                    xQuadSubtrans= xQuadSubtrans,
+                                    xQuadSync= xQuadSync,
+                                    xQuadTrans= xQuadTrans)
     import_result['topology'] = res
 
     return import_result
 
 
-def add_EnergyConsumer(import_result, version, mRID, p, q, bch, gch, BaseVoltage, name = "EnergyConsumer"):
+def add_EnergyConsumer(import_result, version, mRID, p, q, BaseVoltage, name = "EnergyConsumer"):
     res = import_result['topology']
     TopologicalNode = ''
     
@@ -378,8 +349,6 @@ def add_EnergyConsumer(import_result, version, mRID, p, q, bch, gch, BaseVoltage
                                         name= name,
                                         p= p,
                                         q= q,
-                                        bch= bch,
-                                        gch= gch,
                                         BaseVoltage= BaseVoltage,
                                         Terminals = [res[terminal_name]])
     else:
