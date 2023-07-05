@@ -142,6 +142,12 @@ def add_external_network_injection(import_result, version, mRID, voltage_set_poi
 
 def add_ACLineSegment(import_result, version, mRID_1, mRID_2, r, x, bch, gch, name = 'ACLineSegment'):
     res = import_result['topology']
+    
+    if name in res:
+        print(name, "is already included, ... create ACLineSegment with new mRID")
+        name = name + str(list(res.keys()).count("ACLineSegment") + 1)
+    
+
     TopologicalNode1 = ''
     TopologicalNode2 = ''
     if mRID_1 in res:
@@ -188,9 +194,11 @@ def add_ACLineSegment(import_result, version, mRID_1, mRID_2, r, x, bch, gch, na
 
     if TopologicalNode1 == '':
         print('No Terminal with first mRID ', mRID_1, ' found in object list!')
+        return 0
 
     if TopologicalNode2 == '':
         print('No Terminal with second mRID ', mRID_2, ' found in object list!')
+        return 0
 
     import_result['topology'] = res
 
@@ -245,11 +253,16 @@ def add_TopologicalNode(import_result, version, BaseVoltage, mRID = ""):
     return import_result
 
     
-def add_SynchronousMachine(import_result, version, mRID, RotatingMachine, name = 'SynchronousMachine'):          
+def add_SynchronousMachine(import_result, version, mRID, p, q, ratedS, name = 'SynchronousMachine'):          
 # RotatingMachine without paramameters? 
     res = import_result['topology']
     TopologicalNode = ''
     
+    if name in res:
+        print(name, "is already included, ... create SynchronousMachine with new mRID")
+        name = name + str(list(res.keys()).count("SynchronousMachine") + 1)
+    
+
     if mRID in res:
         if 'TopologicalNode' in str(type(res[mRID])):
             TopologicalNode = res[mRID]
@@ -272,13 +285,16 @@ def add_SynchronousMachine(import_result, version, mRID, RotatingMachine, name =
         SynchronousMachine_class = getattr(SynchronousMachine_module, 'SynchronousMachine')
         res[name] = SynchronousMachine_class(mRID= name,
                                         name= name,
-                                        RotatingMachine= RotatingMachine,
+                                        p= p,
+                                        q= q,
+                                        ratedS= ratedS,
                                         Terminals = [res[terminal_name]])
         
         res[terminal_name].ConductingEquipment = res[name]
 
     else:
         print('No Terminal with mRID ', mRID, ' found in object list!')
+        return 0
 
     import_result['topology'] = res
 
@@ -287,6 +303,7 @@ def add_SynchronousMachine(import_result, version, mRID, RotatingMachine, name =
 
 def extend_SynchronousMachineTimeConstantReactance(import_result, version, SynchronousMachineID, damping, intertia, statorResistance, statorLeakageReactance, tpdo, tpqo, tppdo, tppqo, xDirectSubtrans, xDirectSync, xDirectTrans, xQuadSubtrans, xQuadSync, xQuadTrans, name= "SynchronousMachineTimeConstantReactance"):
     res = import_result['topology']
+    
     
     #module_name = "cimpy." + version + ".Equipment."
     module_name = "cimpy." + version + "."
@@ -325,6 +342,10 @@ def add_EnergyConsumer(import_result, version, mRID, p, q, BaseVoltage, name = "
     res = import_result['topology']
     TopologicalNode = ''
     
+    if name in res:
+        print(name, "is already included, ... create EnergyConsumer with new mRID")
+        name = name + str(list(res.keys()).count("EnergyConsumer") + 1)
+
     if mRID in res:
         if 'TopologicalNode' in str(type(res[mRID])):
             TopologicalNode = res[mRID]
@@ -333,6 +354,7 @@ def add_EnergyConsumer(import_result, version, mRID, p, q, BaseVoltage, name = "
 
     if TopologicalNode != '':
         terminal_name = 'Terminal_' + name 
+        PowerFlow_name =  name + "-sv"
 
         #module_name = "cimpy." + version + ".Equipment."
         module_name = "cimpy." + version + "."
@@ -351,10 +373,57 @@ def add_EnergyConsumer(import_result, version, mRID, p, q, BaseVoltage, name = "
                                         q= q,
                                         BaseVoltage= BaseVoltage,
                                         Terminals = [res[terminal_name]])
+         
+        SvPowerFlow_module = importlib.import_module((module_name + 'SvPowerFlow'))
+        SvPowerFlow_class = getattr(SvPowerFlow_module, 'SvPowerFlow')
+        res[name] = SvPowerFlow_class(mRID= PowerFlow_name,
+                                        name= PowerFlow_name,
+                                        p= p,
+                                        q= q,
+                                        Terminals = [res[terminal_name]])
+        
+        res[terminal_name].ConductingEquipment = res[name]
+   
     else:
         print('No Terminal with mRID ', mRID, ' found in object list!')
 
     import_result['topology'] = res
 
     return import_result    
+
+
+def add_PowerTransfomer(import_result, version, mRID, r, x, BaseVoltage, name = "PowerTransfomer"):
+    res = import_result['topology']
+    TopologicalNode = ''
+    
+    if name in res:
+        print(name, "is already included, ... create PowerTransfomer with new mRID")
+        name = name + str(list(res.keys()).count("PowerTransfomer") + 1)
+
+    if mRID in res:
+        if 'TopologicalNode' in str(type(res[mRID])):
+            TopologicalNode = res[mRID]
+        elif 'ConnectivityNode' in str(type(res[mRID])):
+            TopologicalNode = res[mRID].TopologicalNode.mRID
+
+    if TopologicalNode != '':
+        terminal_name = 'Terminal_' + name 
+        HVSide_name = name + "-HVSide"
+        LVSide_name = name + "-LVSide"
+        
+
+        #module_name = "cimpy." + version + ".Equipment."
+        module_name = "cimpy." + version + "."
+        
+        terminal_module = importlib.import_module((module_name + 'Terminal'))
+        terminal_class = getattr(terminal_module, 'Terminal')
+        res[terminal_name] = terminal_class(mRID=terminal_name,
+                                            name=terminal_name,
+                                            TopologicalNode=TopologicalNode)
+
+        
+
+
+
+
 
