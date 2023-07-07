@@ -301,28 +301,23 @@ def add_SynchronousMachine(import_result, version, mRID, p, q, ratedS, name = 'S
     return import_result
 
 
-def extend_SynchronousMachineTimeConstantReactance(import_result, version, SynchronousMachineID, damping, intertia, statorResistance, statorLeakageReactance, tpdo, tpqo, tppdo, tppqo, xDirectSubtrans, xDirectSync, xDirectTrans, xQuadSubtrans, xQuadSync, xQuadTrans, name= "SynchronousMachineTimeConstantReactance"):
+def extend_SynchronousMachineTimeConstantReactance(import_result, version, SynchronousMachineID, damping, inertia, statorResistance, statorLeakageReactance, tpdo, tpqo, tppdo, tppqo, xDirectSubtrans, xDirectSync, xDirectTrans, xQuadSubtrans, xQuadSync, xQuadTrans):
     res = import_result['topology']
-    
+    name = SynchronousMachineID.mRID + "_TimeConstantReactance"
     
     #module_name = "cimpy." + version + ".Equipment."
     module_name = "cimpy." + version + "."
 
-    RotatingMachineDynamics_module = importlib.import_module((module_name + 'RotatingMachineDynamics'))
-    RotatingMachineDynamics_class = getattr(RotatingMachineDynamics_module, 'RotatingMachineDynamics')
-    RotatingMachineDynamics = RotatingMachineDynamics_class(mRID= "RotatingMachineDynamics",
-                                    name= "RotatingMachineDynamics",
-                                    damping= damping,
-                                    intertia= intertia,
-                                    statorResistance= statorResistance,
-                                    statorLeakageReactance= statorLeakageReactance)
     
     SynchronousMachineTCR_module = importlib.import_module((module_name + 'SynchronousMachineTimeConstantReactance'))
     SynchronousMachineTCR_class = getattr(SynchronousMachineTCR_module, 'SynchronousMachineTimeConstantReactance')
     res[name] = SynchronousMachineTCR_class(mRID= name,
                                     name= name,
                                     SynchronousMachine = SynchronousMachineID,
-                                    RotatingMachineDynamics= RotatingMachineDynamics,
+                                    damping= damping,
+                                    inertia= inertia,
+                                    statorResistance= statorResistance,
+                                    statorLeakageReactance= statorLeakageReactance,
                                     tpdo= tpdo,
                                     tpqo= tpqo,
                                     tppdo= tppdo,
