@@ -380,19 +380,20 @@ def add_EnergyConsumer(import_result, version, mRID, p, q, BaseVoltage, name = "
                                         name= PowerFlow_name,
                                         p= p,
                                         q= q,
-                                        Terminals = [res[terminal_name]])
+                                        Terminal = res[terminal_name])
         
         res[terminal_name].ConductingEquipment = res[name]
    
     else:
         print('No Terminal with mRID ', mRID, ' found in object list!')
+        return 0
 
     import_result['topology'] = res
 
     return import_result    
 
 
-def add_PowerTransfomer(import_result, version, mRID, r, x, BaseVoltage, name = "PowerTransfomer"):
+def add_PowerTransfomer(import_result, version, mRID, r, x, BaseVoltage, mRatioAbs, name = "PowerTransfomer"):
     res = import_result['topology']
     TopologicalNode = ''
     
@@ -420,7 +421,55 @@ def add_PowerTransfomer(import_result, version, mRID, r, x, BaseVoltage, name = 
         res[terminal_name] = terminal_class(mRID=terminal_name,
                                             name=terminal_name,
                                             TopologicalNode=TopologicalNode)
+        
+        PowerTransformer_module = importlib.import_module((module_name + 'PowerTransformer'))
+        PowerTransformer_class = getattr(PowerTransformer_module, 'PowerTransformer')
+        res[name] = PowerTransformer_class(mRID=name,
+                                name=name)
+        
+        HVSide_module = importlib.import_module((module_name + 'PowerTransformerEnd'))
+        HVSide_class = getattr(HVSide_module, 'PowerTransformerEnd')
+        res[HVSide_name] = HVSide_class(mRID=HVSide_name,
+                                        name=HVSide_name,
+                                        ratedU=BaseVoltage,
+                                        r=r,
+                                        x=x,
+                                        endNumber=1,
+                                        Terminal=res[terminal_name],
+                                        PowerTransformer=res[name] )
+        
+        LVSide_module = importlib.import_module((module_name + 'PowerTransformerEnd'))
+        LVSide_class = getattr(LVSide_module, 'PowerTransformerEnd')
+        res[LVSide_name] = LVSide_class(mRID=LVSide_name,
+                                        name=LVSide_name,
+                                        ratedU=BaseVoltage/mRatioAbs,
+                                        endNumber=2,
+                                        Terminal=res[terminal_name],
+                                        PowerTransformer=res[name] )
+        
+        res[name].PowerTransformerEnd = [res[HVSide_name], res[LVSide_name]]
 
+        res[terminal_name].ConductingEquipment = res[name]
+   
+    else:
+        print('No Terminal with mRID ', mRID, ' found in object list!')
+        return 0
+
+    import_result['topology'] = res
+
+    return import_result    
+
+def create_BaseVoltage(VoltageLevel):
+        
+    #module_name = "cimpy." + version + ".Equipment."
+    module_name = "cimpy." + "cgmes_v2_4_15" + "."
+
+    BaseVoltage_module = importlib.import_module((module_name + 'BaseVoltage'))
+    BaseVoltage_class = getattr(BaseVoltage_module, 'BaseVoltage')
+    mBaseVoltage = BaseVoltage_class(VoltageLevel=VoltageLevel )
+
+    return mBaseVoltage
+    
         
 
 
