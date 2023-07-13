@@ -6,7 +6,7 @@ import numpy
 
 #Nodes
 Nodes = dict()
-Components = dict()
+Components_Dict = dict()
 
 
 # define dpsimpy domains
@@ -46,20 +46,21 @@ def CIMpyToDPsim(CIM_network, domain):
                                 L=res[i].x/(2*numpy.pi*frequency),
                                 C=res[i].bch/(2*numpy.pi*frequency),
                                 G=res[i].gch)
-            Components[pi_line.name()] = pi_line
+            Components_Dict[pi_line.name()] = {"Element": pi_line, "Nodes": []}
 
         elif 'ExternalNetworkInjection' in str(type(res[i])):
             # Slack
             slack = dpsimpy_components.NetworkInjection(res[i].mRID, dpsimpy.LogLevel.debug)
             #slack.set_parameters(V_ref=nominal_voltage_mv)
-            Components[slack.name()] = slack
+            Components_Dict[slack.name()] = {"Element": slack, "Nodes": []}
 
         elif 'SynchronousMachineTimeConstantReactance' in str(type(res[i])):
             # Synchron Generator
             gen = dpsimpy_components.SynchronGenerator3OrderVBR(res[i].mRID, dpsimpy.LogLevel.debug)
             gen.set_operational_parameters_per_unit(H=res[i].inertia, Ld=res[i].xDirectSync, Lq=res[i].xQuadSync,
                                                     Ld_t=res[i].xDirectTrans, Td0_t=res[i].tpdo)
-            Components[gen.name()] = gen
+            Components_Dict[gen.name()] = {"Element": gen, "Nodes": []}
+
 
     for j in res:
         ### Nodes
@@ -67,15 +68,20 @@ def CIMpyToDPsim(CIM_network, domain):
             n1 = dpsimpy.sp.SimNode(res[j].mRID, dpsimpy.PhaseType.Single)
             Nodes[n1.name()] = n1
             Terminals = res[j].Terminal
-            for terminal in Terminals:
+            for terminal in Terminals:                         # search for connected Components via Terminals
                 component_mRID = terminal.ConductingEquipment.mRID
-                # Hier auf ACLineSegment achten, mehrere Nodes möglich !
-                Components[component_mRID].connect([n1])
+                if component_mRID in Components_Dict:
+                    Components_Dict[component_mRID]["Nodes"].append(n1)
+             
 
-        
-    
+
+    component_list = []                                             # for SystemTopology: Components have to be in list structure
+    for comp_ID in Components_Dict:
+        Components_Dict[comp_ID]["Element"].connect(Components_Dict[comp_ID]["Nodes"])                  # Connect the Components with there Nodes
+        component_list.append(Components_Dict[comp_ID]["Element"])
+   
+
     node_list = list(Nodes.values())
-    component_list =list(Components.values())
     system = dpsimpy.SystemTopology(frequency, node_list, component_list)
 
     return system
