@@ -61,6 +61,18 @@ def CIMpyToDPsim(CIM_network, domain):
                                                     Ld_t=res[i].xDirectTrans, Td0_t=res[i].tpdo)
             Components_Dict[gen.name()] = {"Element": gen, "Nodes": []}
 
+        elif 'EnergyConsumer' in str(type(res[i])):
+            # Energy Consumer
+            load = dpsimpy_components.Load(res[i].mRID, dpsimpy.LogLevel.debug)
+            Components_Dict[load.name()] = {"Element": load, "Nodes": []}
+
+        elif "PowerTransfomer" in str(type(res[i])):
+            transformer = dpsimpy_components.Transformer(res[i].mRID, dpsimpy.LogLevel.debug)
+
+            
+            Components_Dict[transformer.name()] = {"Element": transformer, "Nodes": []}
+            
+
 
     for j in res:
         ### Nodes
