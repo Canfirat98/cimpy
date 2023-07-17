@@ -1,12 +1,14 @@
 import sys
 sys.path.insert(0,'/home/mmo-cya/dpsim/build')
 import dpsimpy
+import cimpy
 from enum import Enum
 import numpy
 
 #Nodes
 Nodes = dict()
 Components_Dict = dict()
+SynchronousMachineTCR_Dict = dict()
 
 
 # define dpsimpy domains
@@ -19,7 +21,7 @@ class Domain(Enum):
 frequency = 60
 
 # Domains hinzufügen
-def CIMpyToDPsim(CIM_network, domain):
+def CIMpyToDPsim(CIM_network, domain, gen_model="3Order"):
 
     res = CIM_network["topology"]
 
@@ -56,21 +58,38 @@ def CIMpyToDPsim(CIM_network, domain):
 
         elif 'SynchronousMachineTimeConstantReactance' in str(type(res[i])):
             # Synchron Generator
-            gen = dpsimpy_components.SynchronGenerator3OrderVBR(res[i].mRID, dpsimpy.LogLevel.debug)
-            gen.set_operational_parameters_per_unit(H=res[i].inertia, Ld=res[i].xDirectSync, Lq=res[i].xQuadSync,
+            if (gen_model=="3Order"):
+                gen = dpsimpy_components.SynchronGenerator3OrderVBR(res[i].mRID, dpsimpy.LogLevel.debug)
+                gen.set_operational_parameters_per_unit(H=res[i].inertia, Ld=res[i].xDirectSync, Lq=res[i].xQuadSync,
                                                     Ld_t=res[i].xDirectTrans, Td0_t=res[i].tpdo)
-            Components_Dict[gen.name()] = {"Element": gen, "Nodes": []}
+            elif (gen_model=="4Order"):
+                gen = dpsimpy_components.SynchronGenerator4OrderVBR(res[i].mRID, dpsimpy.LogLevel.debug)
+                gen.set_operational_parameters_per_unit(H=res[i].inertia, Ld=res[i].xDirectSync, Lq=res[i].xQuadSync, Ld_t=res[i].xDirectTrans, Lq_t=res[i].xQuadTrans, Td0_t=res[i].tpdo, Tq0_t=res[i].tpqo)		
+            elif (gen_model=="6aOrder"):
+                gen = dpsimpy_components.SynchronGenerator6aOrderVBR(res[i].mRID, dpsimpy.LogLevel.debug)
+                gen.set_operational_parameters_per_unit(H=res[i].inertia, Ld=res[i].xDirectSync, Lq=res[i].xQuadSync, Ld_t=res[i].xDirectTrans, Lq_t=res[i].xQuadTrans, Td0_t=res[i].tpdo, Tq0_t=res[i].tpqo,
+                                                        Ld_s=res[i].xDirectSubtrans, Lq_s=res[i].xQuadSubtrans, Td0_s=res[i].tppdo, Tq0_s=res[i].tppqo)	
+            elif (gen_model=="6bOrder"):
+                gen = dpsimpy_components.SynchronGenerator6bOrderVBR(res[i].mRID, dpsimpy.LogLevel.debug)
+                gen.set_operational_parameters_per_unit(H=res[i].inertia, Ld=res[i].xDirectSync, Lq=res[i].xQuadSync, Ld_t=res[i].xDirectTrans, Lq_t=res[i].xQuadTrans, Td0_t=res[i].tpdo, Tq0_t=res[i].tpqo,
+                                                        Ld_s=res[i].xDirectSubtrans, Lq_s=res[i].xQuadSubtrans, Td0_s=res[i].tppdo, Tq0_s=res[i].tppqo)	
+          
+            Components_Dict[gen.name()] = {"Element": gen, "Nodes": [], "Sync_Machine": res[i].SynchronousMachine}
+            SynchronousMachineTCR_Dict[gen.name()] = {res[i].SynchronousMachine}            # Saves the connented SynchronousMachine
 
         elif 'EnergyConsumer' in str(type(res[i])):
             # Energy Consumer
             load = dpsimpy_components.Load(res[i].mRID, dpsimpy.LogLevel.debug)
             Components_Dict[load.name()] = {"Element": load, "Nodes": []}
 
-        elif "PowerTransfomer" in str(type(res[i])):
+        elif isinstance(res[i], cimpy.cgmes_v2_4_15.PowerTransformer):
             transformer = dpsimpy_components.Transformer(res[i].mRID, dpsimpy.LogLevel.debug)
 
-            
             Components_Dict[transformer.name()] = {"Element": transformer, "Nodes": []}
+
+        
+
+        
             
 
 
@@ -82,6 +101,11 @@ def CIMpyToDPsim(CIM_network, domain):
             Terminals = res[j].Terminal
             for terminal in Terminals:                         # search for connected Components via Terminals
                 component_mRID = terminal.ConductingEquipment.mRID
+                if isinstance(terminal.ConductingEquipment, cimpy.cgmes_v2_4_15.SynchronousMachine):        # Match the Nodes from SyncMachine to SynchMachineTCR
+                    for syn_machine_tcr_mRID in SynchronousMachineTCR_Dict:
+                        if terminal.ConductingEquipment == SynchronousMachineTCR_Dict[syn_machine_tcr_mRID]:
+                            component_mRID = syn_machine_tcr_mRID
+                            break
                 if component_mRID in Components_Dict:
                     Components_Dict[component_mRID]["Nodes"].append(n1)
              

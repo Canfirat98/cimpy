@@ -388,13 +388,13 @@ def add_EnergyConsumer(import_result, version, mRID, p, q, BaseVoltage, name = "
     return import_result    
 
 
-def add_PowerTransfomer(import_result, version, mRID, r, x, BaseVoltage, mRatioAbs, name = "PowerTransfomer"):
+def add_PowerTransfomer(import_result, version, mRID, r, x, BaseVoltage, mRatioAbs, name = "PowerTransformer"):
     res = import_result['topology']
     TopologicalNode = ''
     
     if name in res:
-        print(name, "is already included, ... create PowerTransfomer with new mRID")
-        name = name + str(list(res.keys()).count("PowerTransfomer") + 1)
+        print(name, "is already included, ... create PowerTransformer with new mRID")
+        name = name + str(list(res.keys()).count("PowerTransformer") + 1)
 
     if mRID in res:
         if 'TopologicalNode' in str(type(res[mRID])):
