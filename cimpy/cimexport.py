@@ -39,7 +39,7 @@ def _get_reference_uuid(attr_dict, version, topology, mRID, urls):
     reference_list = []
     base_class_name = 'cimpy.' + version + '.Base'
     base_module = importlib.import_module(base_class_name)
-    base_class = getattr(base_module, 'Base')
+    base_class = getattr(base_module, 'Base')   
     for key in attr_dict:
         if key in ['serializationProfile', 'possibleProfileList']:
             reference_list.append({key: attr_dict[key]})
@@ -167,7 +167,7 @@ def _create_namespaces_list(namespaces_dict):
 def _sort_classes_to_profile(class_attributes_list, activeProfileList):
     export_dict = {}
     export_about_dict = {}
-
+    
     # iterate over classes
     for klass in class_attributes_list:
         same_package_list = []
@@ -177,9 +177,7 @@ def _sort_classes_to_profile(class_attributes_list, activeProfileList):
         # serializationProfile class attribute, same for multiple instances of same class, only last origin of variable stored
         serializationProfile = copy.deepcopy(klass['attributes'][0]['serializationProfile'])
         possibleProfileList = copy.deepcopy(klass['attributes'][1]['possibleProfileList'])
-
         class_serializationProfile = ''
-
         if 'class' in serializationProfile.keys():
             # class was imported
             if Profile[serializationProfile['class']] in activeProfileList:
@@ -202,9 +200,9 @@ def _sort_classes_to_profile(class_attributes_list, activeProfileList):
                 if 'class' in possibleProfileList[klass['name']].keys():
                     possibleProfileList[klass['name']]['class'].sort()
                     for klass_profile in possibleProfileList[klass['name']]['class']:
-                        if Profile(klass_profile).name in activeProfileList:
+                        if Profile(klass_profile) in activeProfileList:
                             # active profile for class export found
-                            class_serializationProfile = Profile(klass_profile).name
+                            class_serializationProfile = klass_profile
                             break
                     if class_serializationProfile == '':
                         # no profile in possibleProfileList active
@@ -406,7 +404,6 @@ def _get_attributes(class_object):
     inheritance_list = [class_object]
     class_type = type(class_object)
     parent = class_object
-
     # get parent classes
     while 'Base.Base' not in str(class_type):
         parent = parent.__class__.__bases__[0]()
@@ -441,5 +438,5 @@ def _get_attributes(class_object):
         # are only generated for the inherited class
         if class_name != 'Base':
             attributes_dict['possibleProfileList'][class_name] = parent_class.possibleProfileList
-
+   
     return attributes_dict
