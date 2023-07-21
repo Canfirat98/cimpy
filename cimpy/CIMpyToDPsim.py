@@ -48,13 +48,105 @@ def CIMpyToDPsim(CIM_network, domain, gen_model="3Order"):
                                 L=res[i].x/(2*numpy.pi*frequency),
                                 C=res[i].bch/(2*numpy.pi*frequency),
                                 G=res[i].gch)
+            if (domain == 1):
+                # Set BaseVoltage of ACLineSegment to PiLine
+                baseVoltage = res[i].BaseVoltage.nominalVoltage
+                pi_line.set_base_voltage(baseVoltage)
+
             Components_Dict[pi_line.name()] = {"Element": pi_line, "Nodes": []}
 
         elif 'ExternalNetworkInjection' in str(type(res[i])):
             # Slack
             slack = dpsimpy_components.NetworkInjection(res[i].mRID, dpsimpy.LogLevel.debug)
-            #slack.set_parameters(V_ref=nominal_voltage_mv)
+            
+            if (domain == 1):
+                baseVoltage = 0
+                for obj in res.values():
+                    if isinstance(obj , cimpy.cgmes_v2_4_15.BaseVoltage):
+                        if obj.ConductingEquipment != 'list':
+                            for comp in obj.ConductingEquipment:
+                                if comp.mRID == slack.name():
+                                    baseVoltage = obj.BaseVoltage.nominalVoltage
+                                    break
+
+                if (baseVoltage == 0):
+                    # Take baseVoltage of topologicalNode where equipment is connected to
+                    for obj in res.values():
+                        if isinstance(obj, cimpy.cgmes_v2_4_15.TopologicalNode):
+                                for term in obj.Terminal:
+                                    if term.ConductingEquipment.mRID == slack.name():
+                                        baseVoltage = obj.BaseVoltage.nominalVoltage
+                                        break
+                slack.set_base_voltage(baseVoltage)
+
+                if res[i].RegulatingControl != None:
+                    voltageSetPoint = res[i].RegulatingControl.targetValue
+                else:
+                    voltageSetPoint = baseVoltage
+                slack.set_parameters(voltage_set_point = voltageSetPoint)
+            
+            
             Components_Dict[slack.name()] = {"Element": slack, "Nodes": []}
+
+        elif isinstance(res[i], cimpy.cgmes_v2_4_15.SynchronousMachine) and (domain == 1):
+            gen_pf = dpsimpy.sp.ph1.SynchronGenerator(res[i].mRID, dpsimpy.LogLevel.debug)
+            try:
+                res[i].GeneratingUnit.RotatingMachine.ratedS
+            except:
+                gen_baseS= res[i].ratedS
+            else:
+                gen_baseS= res[i].GeneratingUnit.RotatingMachine.ratedS
+            
+            try:
+                res[i].GeneratingUnit.RotatingMachine.ratedU
+            except:
+                gen_baseV= res[i].ratedU
+            else:
+                gen_baseV= res[i].GeneratingUnit.RotatingMachine.ratedU          
+            
+            try:
+                res[i].GeneratingUnit.initialP
+            except AttributeError:
+                try:
+                    res[i].GeneratingUnit.RotatingMachine.p
+                except AttributeError:
+                    print("Fehler")
+                else:
+                    gen_p = res[i].GeneratingUnit.RotatingMachine.p
+            else:
+                gen_p= res[i].GeneratingUnit.initialP  
+
+            # 
+            try:
+                res[i].GeneratingUnit.RotatingMachine.RegulatingControl.targetValue
+            except AttributeError:
+                try:
+                    res[i].RegulatingControl.targetValue
+                except:
+                    gen_v = 1
+                else:
+                    gen_v= res[i].RegulatingControl.targetValue
+            else:
+                gen_v= res[i].GeneratingUnit.RotatingMachine.RegulatingControl.targetValue            
+            
+            # Blindleistung Q
+            try:
+                res[i].q
+            except AttributeError:
+                print("Fehler")
+            else:
+                gen_q= res[i].q  
+             
+
+            gen_pf.set_parameters(rated_apparent_power= gen_baseS, rated_voltage=gen_baseV, 
+                      set_point_active_power=gen_p, set_point_voltage=gen_v, 
+                      set_point_reactive_power=gen_q, 
+                      powerflow_bus_type=dpsimpy.PowerflowBusType.PV)
+            #gen_pf.set_base_voltage(nominal_voltage_mv)
+            gen_pf.modify_power_flow_bus_type(dpsimpy.PowerflowBusType.PV)
+
+            Components_Dict[gen_pf.name()] = {"Element": gen_pf, "Nodes": []}
+
 
         elif 'SynchronousMachineTimeConstantReactance' in str(type(res[i])):
             # Synchron Generator
@@ -84,14 +176,14 @@ def CIMpyToDPsim(CIM_network, domain, gen_model="3Order"):
 
         elif isinstance(res[i], cimpy.cgmes_v2_4_15.PowerTransformer):
             transformer = dpsimpy_components.Transformer(res[i].mRID, dpsimpy.LogLevel.debug)
+            if (domain == 1):
+                # Take baseVoltage of HighVoltage Side (PowerTransformerEnd[0])
+                baseVoltage = res[i].PowerTransformerEnd[0].BaseVoltage.nominalVoltage
+                transformer.set_base_voltage(baseVoltage)
 
             Components_Dict[transformer.name()] = {"Element": transformer, "Nodes": []}
 
-        
-
-        
-            
-
+    
 
     for j in res:
         ### Nodes
@@ -101,13 +193,14 @@ def CIMpyToDPsim(CIM_network, domain, gen_model="3Order"):
             Terminals = res[j].Terminal
             for terminal in Terminals:                         # search for connected Components via Terminals
                 component_mRID = terminal.ConductingEquipment.mRID
-                if isinstance(terminal.ConductingEquipment, cimpy.cgmes_v2_4_15.SynchronousMachine):        # Match the Nodes from SyncMachine to SynchMachineTCR
+                if isinstance(terminal.ConductingEquipment, cimpy.cgmes_v2_4_15.SynchronousMachine) and (len(SynchronousMachineTCR_Dict) != 0):      # Match the Nodes from SyncMachine to SynchMachineTCR
                     for syn_machine_tcr_mRID in SynchronousMachineTCR_Dict:
                         if terminal.ConductingEquipment == SynchronousMachineTCR_Dict[syn_machine_tcr_mRID]:
                             component_mRID = syn_machine_tcr_mRID
                             break
                 if component_mRID in Components_Dict:
                     Components_Dict[component_mRID]["Nodes"].append(n1)
+                   
              
 
 
