@@ -5,9 +5,11 @@ import cimpy
 from enum import Enum
 import numpy
 
-#Nodes
+# Nodes
 Nodes = dict()
+# Components
 Components_Dict = dict()
+# Synchronous Machines
 SynchronousMachineTCR_Dict = dict()
 
 
@@ -44,10 +46,10 @@ def CIMpyToDPsim(CIM_network, domain, gen_model="3Order"):
         if 'ACLineSegment' in str(type(res[i])):
             # PiLine
             pi_line = dpsimpy_components.PiLine(res[i].mRID, dpsimpy.LogLevel.debug)
-            pi_line.set_parameters(R= res[i].r,
-                                L=res[i].x/(2*numpy.pi*frequency),
-                                C=res[i].bch/(2*numpy.pi*frequency),
-                                G=res[i].gch)
+            pi_line.set_parameters(R= res[i].r,                             #line resistance                         
+                                L=res[i].x/(2*numpy.pi*frequency),          #line inductance
+                                C=res[i].bch/(2*numpy.pi*frequency),        #line capacitance
+                                G=res[i].gch)                               #line conductance
             if (domain == 1):
                 # Set BaseVoltage of ACLineSegment to PiLine
                 baseVoltage = res[i].BaseVoltage.nominalVoltage

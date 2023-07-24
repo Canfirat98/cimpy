@@ -2,8 +2,12 @@ import sys
 sys.path.insert(0,'/home/mmo-cya/dpsim/build')
 import dpsimpy
 import cimpy
-import numpy
+from math import sqrt, pi
 from cimpy import utils
+
+
+
+frequency = 60
 
 def node_of_comp(self, comp_name):
     """
@@ -39,7 +43,43 @@ def DPsimToCIMpy ( DPsim_system ):
                 'topology': {}
                 }
     
-    
+    B1 = utils.create_BaseVoltage(24000)
+
+    for node in DPsim_system.nodes:
+        network = utils.add_TopologicalNode(network, "cgmes_v2_4_15", B1,0,0, node.name())
+        
+
+    for comp in DPsim_system.components:
+        if "PiLine" in str(type(comp)):
+            # create ACLineSegment
+            # PiLine Parameters
+            name = comp.name()
+            r = float(str(comp.attr("R_series")))
+            x= float(str(comp.attr("L_series"))) * (2*pi*frequency)
+            bch= float(str(comp.attr("C_parallel"))) * (2*pi*frequency)
+            gch = float(str(comp.attr("G_parallel")))
+            
+            network = utils.add_ACLineSegment(network, "cgmes_v2_4_15", "n1_pf", "n2_pf", r, x, bch, gch, B1, name)
+
+        elif "NetworkInjection" in str(type(comp)):
+            network = utils.add_external_network_injection(network, "cgmes_v2_4_15", "n2_pf", 1)
+        
+        elif "SynchronGenerator" in str(type(comp)):
+            # Generator Parameters
+            p = float(str(comp.attr("P_set")))
+            q = float(str(comp.attr("Q_set")))
+            ratedS = sqrt(p*p+q*q)
+            ratedU = float(str(comp.attr("base_Voltage")))
+            targetValue = float(str(comp.attr("V_set")))
+            initialP = float(str(comp.attr("P_set_pu")))
+            name = comp.name()
+
+            network = utils.add_SynchronousMachine(network, "cgmes_v2_4_15", "n1_pf", p, q, ratedS, ratedU, targetValue, initialP, name)
+         
+
+    return network
+
+
 
 
 
