@@ -427,7 +427,7 @@ def add_EnergyConsumer(import_result, version, mRID, p, q, BaseVoltage, name = "
     return import_result    
 
 
-def add_PowerTransfomer(import_result, version, mRID, r, x, BaseVoltage, mRatioAbs, name = "PowerTransformer"):
+def add_PowerTransfomer(import_result, version, mRID, r, x, mNominalVoltageEnd1, mNominalVoltageEnd2, name = "PowerTransformer"):
     res = import_result['topology']
     TopologicalNode = ''
     
@@ -465,7 +465,7 @@ def add_PowerTransfomer(import_result, version, mRID, r, x, BaseVoltage, mRatioA
         HVSide_class = getattr(HVSide_module, 'PowerTransformerEnd')
         res[HVSide_name] = HVSide_class(mRID=HVSide_name,
                                         name=HVSide_name,
-                                        ratedU=BaseVoltage,
+                                        ratedU=mNominalVoltageEnd1,
                                         r=r,
                                         x=x,
                                         endNumber=1,
@@ -476,7 +476,7 @@ def add_PowerTransfomer(import_result, version, mRID, r, x, BaseVoltage, mRatioA
         LVSide_class = getattr(LVSide_module, 'PowerTransformerEnd')
         res[LVSide_name] = LVSide_class(mRID=LVSide_name,
                                         name=LVSide_name,
-                                        ratedU=BaseVoltage/mRatioAbs,
+                                        ratedU=mNominalVoltageEnd2,
                                         endNumber=2,
                                         Terminal=res[terminal_name],
                                         PowerTransformer=res[name] )
