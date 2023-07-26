@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rdf:RDF xmlns:cim="http://iec.ch/TC57/2013/CIM-schema-cim16#" xmlns:entsoe="http://entsoe.eu/CIM/SchemaExtension/3/1#" xmlns:md="http://iec.ch/TC57/61970-552/ModelDescription/1#" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" >
+<md:FullModel rdf:about="test">
+    <md:Model.created>26/07/2023 12:38:15</md:Model.created>
+    <md:Model.modelingAuthoritySet>www.sogno.energy</md:Model.modelingAuthoritySet>
+    <md:Model.profile>Equipment</md:Model.profile>
+</md:FullModel>
+<cim:BaseVoltage rdf:ID="BaseVoltage">
+    <cim:BaseVoltage.nominalVoltage>100</cim:BaseVoltage.nominalVoltage>
+</cim:BaseVoltage>
+<cim:Terminal rdf:ID="Terminal_1_Line1">
+    <cim:IdentifiedObject.name>Terminal_1_Line1</cim:IdentifiedObject.name>
+    <cim:Terminal.ConductingEquipment rdf:resource="#Line1"/>
+</cim:Terminal>
+<cim:Terminal rdf:ID="Terminal_2_Line1">
+    <cim:IdentifiedObject.name>Terminal_2_Line1</cim:IdentifiedObject.name>
+    <cim:Terminal.ConductingEquipment rdf:resource="#Line1"/>
+</cim:Terminal>
+<cim:ACLineSegment rdf:ID="Line1">
+    <cim:IdentifiedObject.name>Line1</cim:IdentifiedObject.name>
+    <cim:ConductingEquipment.BaseVoltage rdf:resource="#BaseVoltage"/>
+    <cim:ConductingEquipment.Terminals rdf:resource="#Terminal_1_Line1"/>
+    <cim:ConductingEquipment.Terminals rdf:resource="#Terminal_2_Line1"/>
+    <cim:ACLineSegment.r>0.1</cim:ACLineSegment.r>
+    <cim:ACLineSegment.x>0.2</cim:ACLineSegment.x>
+</cim:ACLineSegment>
+<cim:Terminal rdf:ID="Terminal_EC1">
+    <cim:IdentifiedObject.name>Terminal_EC1</cim:IdentifiedObject.name>
+    <cim:Terminal.ConductingEquipment rdf:resource="#EC1"/>
+</cim:Terminal>
+<cim:EnergyConsumer rdf:ID="EC1">
+    <cim:IdentifiedObject.name>EC1</cim:IdentifiedObject.name>
+    <cim:ConductingEquipment.BaseVoltage rdf:resource="#BaseVoltage"/>
+    <cim:ConductingEquipment.Terminals rdf:resource="#Terminal_EC1"/>
+</cim:EnergyConsumer>
+<cim:Terminal rdf:ID="Terminal_EC2">
+    <cim:IdentifiedObject.name>Terminal_EC2</cim:IdentifiedObject.name>
+    <cim:Terminal.ConductingEquipment rdf:resource="#EC2"/>
+</cim:Terminal>
+<cim:EnergyConsumer rdf:ID="EC2">
+    <cim:IdentifiedObject.name>EC2</cim:IdentifiedObject.name>
+    <cim:ConductingEquipment.BaseVoltage rdf:resource="#BaseVoltage"/>
+    <cim:ConductingEquipment.Terminals rdf:resource="#Terminal_EC2"/>
+</cim:EnergyConsumer>
+<cim:TopologicalNode rdf:about="#Node1">
+    <cim:IdentifiedObject.name>Node1</cim:IdentifiedObject.name>
+</cim:TopologicalNode>
+<cim:TopologicalNode rdf:about="#Node2">
+    <cim:IdentifiedObject.name>Node2</cim:IdentifiedObject.name>
+</cim:TopologicalNode>
+<cim:Diagram rdf:about="#066e8e46-ff23-47ec-be3f-b17a273f134d">
+    <cim:IdentifiedObject.name>Test Diagram</cim:IdentifiedObject.name>
+</cim:Diagram>
+</rdf:RDF>

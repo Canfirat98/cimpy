@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rdf:RDF xmlns:cim="http://iec.ch/TC57/2013/CIM-schema-cim16#" xmlns:entsoe="http://entsoe.eu/CIM/SchemaExtension/3/1#" xmlns:md="http://iec.ch/TC57/61970-552/ModelDescription/1#" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" >
+<md:FullModel rdf:about="test">
+    <md:Model.created>26/07/2023 12:38:15</md:Model.created>
+    <md:Model.modelingAuthoritySet>www.sogno.energy</md:Model.modelingAuthoritySet>
+    <md:Model.profile>StateVariables</md:Model.profile>
+</md:FullModel>
+<cim:SvVoltage rdf:ID="Node1-sv">
+    <cim:SvVoltage.v>100</cim:SvVoltage.v>
+    <cim:SvVoltage.TopologicalNode rdf:resource="#Node1"/>
+</cim:SvVoltage>
+<cim:SvVoltage rdf:ID="Node2-sv">
+    <cim:SvVoltage.v>100</cim:SvVoltage.v>
+    <cim:SvVoltage.TopologicalNode rdf:resource="#Node2"/>
+</cim:SvVoltage>
+<cim:SvPowerFlow rdf:ID="EC1-sv">
+    <cim:SvPowerFlow.Terminal rdf:resource="#Terminal_EC1"/>
+    <cim:SvPowerFlow.p>100</cim:SvPowerFlow.p>
+    <cim:SvPowerFlow.q>100</cim:SvPowerFlow.q>
+</cim:SvPowerFlow>
+<cim:SvPowerFlow rdf:ID="EC2-sv">
+    <cim:SvPowerFlow.Terminal rdf:resource="#Terminal_EC2"/>
+    <cim:SvPowerFlow.p>100</cim:SvPowerFlow.p>
+    <cim:SvPowerFlow.q>100</cim:SvPowerFlow.q>
+</cim:SvPowerFlow>
+</rdf:RDF>
