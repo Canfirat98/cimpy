@@ -1,5 +1,5 @@
 import sys
-sys.path.insert(0,'/home/mmo-cya/dpsim/build')
+sys.path.insert(0,'/home/mmo/git/Can/dpsim/build')
 import dpsimpy
 import cimpy
 from enum import Enum

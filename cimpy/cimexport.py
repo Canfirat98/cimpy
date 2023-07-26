@@ -167,7 +167,6 @@ def _create_namespaces_list(namespaces_dict):
 def _sort_classes_to_profile(class_attributes_list, activeProfileList):
     export_dict = {}
     export_about_dict = {}
-    
     # iterate over classes
     for klass in class_attributes_list:
         same_package_list = []
@@ -202,7 +201,7 @@ def _sort_classes_to_profile(class_attributes_list, activeProfileList):
                     for klass_profile in possibleProfileList[klass['name']]['class']:
                         if Profile(klass_profile) in activeProfileList:
                             # active profile for class export found
-                            class_serializationProfile = klass_profile
+                            class_serializationProfile=Profile(klass_profile).name
                             break
                     if class_serializationProfile == '':
                         # no profile in possibleProfileList active
