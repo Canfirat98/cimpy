@@ -97,7 +97,7 @@ def DPsimToCIMpy ( DPsim_system , DPsim_simulation):
             # Generator Parameters
             p = float(str(comp.attr("P_set")))
             q = float(str(comp.attr("Q_set")))
-            ratedS = sqrt(p*p+q*q)
+            ratedS = float(str(sqrt(p*p+q*q)))
             ratedU = float(str(comp.attr("base_Voltage")))
             targetValue = float(str(comp.attr("V_set")))
             initialP = float(str(comp.attr("P_set_pu")))
@@ -129,19 +129,19 @@ def DPsimToCIMpy ( DPsim_system , DPsim_simulation):
 
         elif "SynchronGenerator" and "Order" in str(type(comp)):
             # Synchronous Machine Parameters
-            p = comp.attr("initElecPower").derive_real()
-            q = comp.attr("initElecPower").derive_imag()
-            ratedS = comp.attr("initElecPower").derive_mag()
-            ratedU = float(str(comp.attr("base_Voltage")))
-            targetValue = float(str(comp.attr("V_set")))
-            initialP = float(str(comp.attr("P_set_pu")))
+            p = float(str(comp.attr("initElecPower").derive_real()))
+            q = float(str(comp.attr("initElecPower").derive_imag()))
+            ratedS = float(str(comp.attr("initElecPower").derive_mag()))
+            ratedU = float(str(getattr(comp, "Vnom", 0)))
+            targetValue = float(str( np.linalg.norm(comp.InitVoltage) / comp.Vnom )) # ??? InitVoltage ist komplex, soll ich den Betrag nehmen ???
+            initialP = float(str( comp.attr("initElecPower").derive_real() ))
             Sync_generator_name = comp.name()
 
             #determine the connected Node
             Node_name = node_of_comp(DPsim_system, Sync_generator_name)
             
             # Add Synchronous Machine to the network
-            network_sp = utils.add_SynchronousMachine(network_sp, "cgmes_v2_4_15", Node_name, p, q, ratedS, ratedU, targetValue, initialP, Sync_generator_name)
+            network = utils.add_SynchronousMachine(network, "cgmes_v2_4_15", Node_name, p, q, ratedS, ratedU, targetValue, initialP, Sync_generator_name)
 
 
             # Synchronous Machine TimeConstantReactance Parameters
@@ -159,7 +159,7 @@ def DPsimToCIMpy ( DPsim_system , DPsim_simulation):
             xQuadSync = float(str(comp.attr("Lq")))
             xQuadTrans = float(str(comp.attr("Lq_t")))
             # Extend SynchronousMachine with dynamic Parameters
-            network_sp= utils.extend_SynchronousMachineTimeConstantReactance(network_sp, "cgmes_v2_4_15", network_sp["topology"][Sync_generator_name], 0, inertia,
+            network= utils.extend_SynchronousMachineTimeConstantReactance(network, "cgmes_v2_4_15", network["topology"][Sync_generator_name], 0, inertia,
                         statorResistance, statorLeakageReactance, tpdo, tpqo, tppdo, tppqo, xDirectSubtrans, xDirectSync, xDirectTrans, xQuadSubtrans, xQuadSync, xQuadTrans)
                 
     return network

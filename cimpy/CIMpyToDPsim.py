@@ -1,9 +1,10 @@
 import sys
-sys.path.insert(0,'/home/mmo/git/Can/dpsim/build')
+sys.path.insert(0,'/home/mmo-cya/dpsim/build')
 import dpsimpy
 import cimpy
 from enum import Enum
 import numpy
+import cmath
 
 # Nodes
 Nodes = dict()
@@ -112,7 +113,7 @@ def CIMpyToDPsim(CIM_network, domain, gen_model="3Order"):
                 try:
                     res[i].GeneratingUnit.RotatingMachine.p
                 except AttributeError:
-                    print("Fehler")
+                    raise Exception('initialP of SG {} was not found'.format(res[i].mRID))
                 else:
                     gen_p = res[i].GeneratingUnit.RotatingMachine.p
             else:
@@ -135,10 +136,15 @@ def CIMpyToDPsim(CIM_network, domain, gen_model="3Order"):
             try:
                 res[i].q
             except AttributeError:
-                print("Fehler")
+                raise Exception('initialP of SG {} was not found'.format(res[i].mRID))
             else:
                 gen_q= res[i].q  
-             
+            # Type cast to float
+            gen_baseS = float(str(gen_baseS))
+            gen_baseV = float(str(gen_baseV))
+            gen_p = float(str(gen_p))
+            gen_v = float(str(gen_v))
+            gen_q = float(str(gen_q))
 
             gen_pf.set_parameters(rated_apparent_power= gen_baseS, rated_voltage=gen_baseV, 
                       set_point_active_power=gen_p, set_point_voltage=gen_v, 
@@ -152,28 +158,82 @@ def CIMpyToDPsim(CIM_network, domain, gen_model="3Order"):
 
         elif 'SynchronousMachineTimeConstantReactance' in str(type(res[i])):
             # Synchron Generator
-            if (gen_model=="3Order"):
+            nom_power = float(str(res[i].SynchronousMachine.ratedS))
+            nom_voltage = float(str(res[i].SynchronousMachine.ratedU))
+            L0 = 0.15
+            H=float(str(res[i].inertia))
+            Ld=float(str(res[i].xDirectSync))
+            Lq=float(str(res[i].xQuadSync))
+            Ld_t=float(str(res[i].xDirectTrans))
+            Td0_t=float(str(res[i].tpdo))
+            if (gen_model=="3Order"):      
                 gen = dpsimpy_components.SynchronGenerator3OrderVBR(res[i].mRID, dpsimpy.LogLevel.debug)
-                gen.set_operational_parameters_per_unit(H=res[i].inertia, Ld=res[i].xDirectSync, Lq=res[i].xQuadSync,
-                                                    Ld_t=res[i].xDirectTrans, Td0_t=res[i].tpdo)
+                gen.set_operational_parameters_per_unit(nom_power=nom_power, nom_voltage=nom_voltage, nom_frequency=frequency, H=H,
+                                                        Ld=Ld, Lq=Lq, L0=L0, Ld_t=Ld_t, Td0_t=Td0_t)
             elif (gen_model=="4Order"):
                 gen = dpsimpy_components.SynchronGenerator4OrderVBR(res[i].mRID, dpsimpy.LogLevel.debug)
-                gen.set_operational_parameters_per_unit(H=res[i].inertia, Ld=res[i].xDirectSync, Lq=res[i].xQuadSync, Ld_t=res[i].xDirectTrans, Lq_t=res[i].xQuadTrans, Td0_t=res[i].tpdo, Tq0_t=res[i].tpqo)		
+                gen.set_operational_parameters_per_unit(nom_power=nom_power, nom_voltage=nom_voltage, nom_frequency=frequency, H=res[i].inertia,
+                                                        Ld=res[i].xDirectSync, Lq=res[i].xQuadSync, L0=L0, Ld_t=res[i].xDirectTrans, Lq_t=res[i].xQuadTrans, Td0_t=res[i].tpdo, Tq0_t=res[i].tpqo)		
             elif (gen_model=="6aOrder"):
                 gen = dpsimpy_components.SynchronGenerator6aOrderVBR(res[i].mRID, dpsimpy.LogLevel.debug)
-                gen.set_operational_parameters_per_unit(H=res[i].inertia, Ld=res[i].xDirectSync, Lq=res[i].xQuadSync, Ld_t=res[i].xDirectTrans, Lq_t=res[i].xQuadTrans, Td0_t=res[i].tpdo, Tq0_t=res[i].tpqo,
+                gen.set_operational_parameters_per_unit(nom_power=nom_power, nom_voltage=nom_voltage, nom_frequency=frequency, H=res[i].inertia, Ld=res[i].xDirectSync, Lq=res[i].xQuadSync, L0=L0, Ld_t=res[i].xDirectTrans, Lq_t=res[i].xQuadTrans, Td0_t=res[i].tpdo, Tq0_t=res[i].tpqo,
                                                         Ld_s=res[i].xDirectSubtrans, Lq_s=res[i].xQuadSubtrans, Td0_s=res[i].tppdo, Tq0_s=res[i].tppqo)	
             elif (gen_model=="6bOrder"):
                 gen = dpsimpy_components.SynchronGenerator6bOrderVBR(res[i].mRID, dpsimpy.LogLevel.debug)
-                gen.set_operational_parameters_per_unit(H=res[i].inertia, Ld=res[i].xDirectSync, Lq=res[i].xQuadSync, Ld_t=res[i].xDirectTrans, Lq_t=res[i].xQuadTrans, Td0_t=res[i].tpdo, Tq0_t=res[i].tpqo,
+                gen.set_operational_parameters_per_unit(nom_power=nom_power, nom_voltage=nom_voltage, nom_frequency=frequency, H=res[i].inertia, Ld=res[i].xDirectSync, Lq=res[i].xQuadSync, L0=L0, Ld_t=res[i].xDirectTrans, Lq_t=res[i].xQuadTrans, Td0_t=res[i].tpdo, Tq0_t=res[i].tpqo,
                                                         Ld_s=res[i].xDirectSubtrans, Lq_s=res[i].xQuadSubtrans, Td0_s=res[i].tppdo, Tq0_s=res[i].tppqo)	
-          
+            
+            init_electrical_power = complex( float(str(res[i].SynchronousMachine.p )), float(str(res[i].SynchronousMachine.q )))
+            init_mechanical_power = res[i].SynchronousMachine.p
+            for obj in res.values():
+                if isinstance(obj, cimpy.cgmes_v2_4_15.SvVoltage):
+                    for term in obj.TopologicalNode.Terminal:
+                        if term.ConductingEquipment.mRID == res[i].SynchronousMachine.mRID:
+                            betrag = getattr(obj, "v", 0)
+                            phase = getattr(obj, "angle", 0)
+                            init_complex_terminal_voltage = betrag * cmath.exp(1j * phase)
+                            print("HERE")
+                            break
+
+            gen.set_initial_values(init_complex_electrical_power=init_electrical_power, init_mechanical_power=init_mechanical_power, 
+                           init_complex_terminal_voltage=init_complex_terminal_voltage)
+            
             Components_Dict[gen.name()] = {"Element": gen, "Nodes": [], "Sync_Machine": res[i].SynchronousMachine}
             SynchronousMachineTCR_Dict[gen.name()] = {res[i].SynchronousMachine}            # Saves the connented SynchronousMachine
 
         elif 'EnergyConsumer' in str(type(res[i])):
             # Energy Consumer
-            load = dpsimpy_components.Load(res[i].mRID, dpsimpy.LogLevel.debug)
+            if (domain == 1):
+                load = dpsimpy_components.Load(res[i].mRID, dpsimpy.LogLevel.debug)
+                #load.modify_power_flow_bus_type(dpsimpy.PowerflowBusType.PV)
+            elif (domain == 2):
+                load = dpsimpy_components.Load(res[i].mRID, dpsimpy.LogLevel.debug)
+            else:
+                load = dpsimpy_components.RXLoad(res[i].mRID, dpsimpy.LogLevel.debug)
+
+            if (domain != 1):                   # Only for domains: SP, DP and EMT
+                p = getattr(res[i], "p", 0)
+                q = getattr(res[i], "q", 0)
+                if p == 0 and q == 0:
+                    for obj in res.values():
+                        if isinstance(obj, cimpy.cgmes_v2_4_15.SvPowerFlow):
+                            if obj.Terminal.ConductingEquipment.mRID == load.name():
+                                p = getattr(obj, "p", 0)
+                                q = getattr(obj, "q", 0)
+                                break
+                    if p == 0 and q == 0:
+                        print("Fehler mit p und q")
+                        raise Exception("ERROR")
+                    
+                for obj in res.values():
+                    if isinstance(obj, cimpy.cgmes_v2_4_15.SvVoltage):
+                        for term in obj.TopologicalNode.Terminal:
+                            if term.ConductingEquipment.mRID == load.name():
+                                nom_voltage = getattr(obj, "v", 0)
+                                break
+                if nom_voltage == 0:
+                    nom_voltage= res[i].BaseVoltage.nominalVoltage
+                load.set_parameters(p, q, nom_voltage)
             Components_Dict[load.name()] = {"Element": load, "Nodes": []}
 
         elif isinstance(res[i], cimpy.cgmes_v2_4_15.PowerTransformer):
