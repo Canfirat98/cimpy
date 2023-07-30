@@ -99,7 +99,12 @@ def CIMpyToDPsim(CIM_network, domain, gen_model="3Order"):
                             if term.ConductingEquipment.mRID == slack.name():
                                 baseVoltage = obj.BaseVoltage.nominalVoltage
                                 break
-                voltageSetPoint = res[i].RegulatingControl.targetValue * baseVoltage
+                try:
+                    res[i].RegulatingControl.targetValue
+                except:
+                    voltageSetPoint = 0
+                else:
+                    voltageSetPoint = res[i].RegulatingControl.targetValue * baseVoltage
 
             slack.set_parameters(voltage_set_point = voltageSetPoint)
             
@@ -219,14 +224,14 @@ def CIMpyToDPsim(CIM_network, domain, gen_model="3Order"):
                             betrag = getattr(obj, "v", 0)
                             phase = getattr(obj, "angle", 0)
                             init_complex_terminal_voltage = betrag * cmath.exp(1j * phase)
-                            print("HERE")
                             break
 
             gen.set_initial_values(init_complex_electrical_power=init_electrical_power, init_mechanical_power=init_mechanical_power, 
                            init_complex_terminal_voltage=init_complex_terminal_voltage)
             
             Components_Dict[gen.name()] = {"Element": gen, "Nodes": [], "Sync_Machine": res[i].SynchronousMachine}
-            SynchronousMachineTCR_Dict[gen.name()] = {res[i].SynchronousMachine}            # Saves the connented SynchronousMachine
+            SynchronousMachineTCR_Dict[gen.name()] = res[i].SynchronousMachine            # Saves the connented SynchronousMachine
+            
         elif 'EnergyConsumer' in str(type(res[i])):
             # Energy Consumer
             if (domain == 1):
@@ -298,7 +303,7 @@ def CIMpyToDPsim(CIM_network, domain, gen_model="3Order"):
                 component_mRID = terminal.ConductingEquipment.mRID
                 if isinstance(terminal.ConductingEquipment, cimpy.cgmes_v2_4_15.SynchronousMachine) and (len(SynchronousMachineTCR_Dict) != 0):      # Match the Nodes from SyncMachine to SynchMachineTCR
                     for syn_machine_tcr_mRID in SynchronousMachineTCR_Dict:
-                        if terminal.ConductingEquipment.mRID == SynchronousMachineTCR_Dict[syn_machine_tcr_mRID]:
+                        if terminal.ConductingEquipment.mRID == SynchronousMachineTCR_Dict[syn_machine_tcr_mRID].mRID:
                             component_mRID = syn_machine_tcr_mRID
                             break
                 if component_mRID in Components_Dict:
