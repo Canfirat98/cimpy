@@ -32,13 +32,13 @@ def CIMpyToDPsim(CIM_network, domain, gen_model="3Order"):
 
     # get the correct module to be used (dpsimpy.sp, dpsimpy.dp or dpsimpy.emt) 
     dpsimpy_components = None
-    if (domain == 1):
+    if (domain == Domain.PF):
         dpsimpy_components = dpsimpy.sp.ph1
-    elif (domain == 2):
+    elif (domain == Domain.SP):
         dpsimpy_components = dpsimpy.sp.ph1
-    elif (domain == 3):
+    elif (domain == Domain.DP):
         dpsimpy_components = dpsimpy.dp.ph1
-    elif (domain == 4):
+    elif (domain == Domain.EMT):
         dpsimpy_components = dpsimpy.emt.ph3
     else:
         raise Exception('ERROR: domain {} is not supported in dpsimpy'.format(domain))
@@ -53,7 +53,7 @@ def CIMpyToDPsim(CIM_network, domain, gen_model="3Order"):
                                 L=res[i].x/(2*numpy.pi*frequency),          #line inductance
                                 C=res[i].bch/(2*numpy.pi*frequency),        #line capacitance
                                 G=res[i].gch)                               #line conductance
-            if (domain == 1):
+            if (domain == Domain.PF):
                 # Set BaseVoltage of ACLineSegment to PiLine
                 baseVoltage = res[i].BaseVoltage.nominalVoltage
                 pi_line.set_base_voltage(baseVoltage)
@@ -65,7 +65,7 @@ def CIMpyToDPsim(CIM_network, domain, gen_model="3Order"):
             # Slack
             slack = dpsimpy_components.NetworkInjection(res[i].mRID, dpsimpy.LogLevel.debug)
             
-            if (domain == 1):
+            if (domain == Domain.PF):
                 baseVoltage = 0
                 for obj in res.values():
                     if isinstance(obj , cimpy.cgmes_v2_4_15.BaseVoltage):
@@ -111,7 +111,7 @@ def CIMpyToDPsim(CIM_network, domain, gen_model="3Order"):
             
             Components_Dict[slack.name()] = {"Element": slack, "Nodes": []}
 
-        elif isinstance(res[i], cimpy.cgmes_v2_4_15.SynchronousMachine) and domain == 1:
+        elif isinstance(res[i], cimpy.cgmes_v2_4_15.SynchronousMachine) and domain == Domain.PF:
             gen_pf = dpsimpy.sp.ph1.SynchronGenerator(res[i].mRID, dpsimpy.LogLevel.debug)
             try:
                 res[i].ratedS
@@ -234,7 +234,7 @@ def CIMpyToDPsim(CIM_network, domain, gen_model="3Order"):
             
         elif 'EnergyConsumer' in str(type(res[i])):
             # Energy Consumer
-            if (domain == 1):
+            if (domain == Domain.PF):
                 load = dpsimpy_components.Load(res[i].mRID, dpsimpy.LogLevel.debug)
                 load.modify_power_flow_bus_type(dpsimpy.PowerflowBusType.PV)
                 p = getattr(res[i], "p", 0)
@@ -250,13 +250,13 @@ def CIMpyToDPsim(CIM_network, domain, gen_model="3Order"):
                         print("Fehler mit p und q")
                         raise Exception("ERROR")
                 load.set_parameters(p, q)
-            elif (domain == 2):
+            elif (domain == Domain.SP):
                 load = dpsimpy_components.Load(res[i].mRID, dpsimpy.LogLevel.debug)
             else:
                 load = dpsimpy_components.RXLoad(res[i].mRID, dpsimpy.LogLevel.debug)
 
 
-            if (domain != 1):                   # Only for domains: SP, DP and EMT
+            if (domain != Domain.PF):                   # Only for domains: SP, DP and EMT
                 p = getattr(res[i], "p", 0)
                 q = getattr(res[i], "q", 0)
                 if p == 0 and q == 0:
@@ -284,7 +284,7 @@ def CIMpyToDPsim(CIM_network, domain, gen_model="3Order"):
 
         elif isinstance(res[i], cimpy.cgmes_v2_4_15.PowerTransformer):
             transformer = dpsimpy_components.Transformer(res[i].mRID, dpsimpy.LogLevel.debug)
-            if (domain == 1):
+            if (domain == Domain.PF):
                 # Take baseVoltage of HighVoltage Side (PowerTransformerEnd[0])
                 baseVoltage = res[i].PowerTransformerEnd[0].BaseVoltage.nominalVoltage
                 transformer.set_base_voltage(baseVoltage)
