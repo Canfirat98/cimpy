@@ -265,7 +265,7 @@ def add_TopologicalNode(import_result, version, BaseVoltage, v, angle, mRID = ""
                                         angle=angle,
                                         TopologicalNode=res[mRID])
 
-
+    res[mRID].SvVoltage = res[SvVoltage_name]
     import_result['topology'] = res
 
     return import_result
@@ -505,8 +505,115 @@ def create_BaseVoltage(nominalVoltage):
     mBaseVoltage = BaseVoltage_class(nominalVoltage=nominalVoltage )
 
     return mBaseVoltage
+
+# Switch Module with infinity Conductance to simulate a short circuit in network "import_result" at the node with name "mRID"
+def add_ShortCircuit_Switch(import_result, version, mRID, name = "ShortCircuit_Switch"):
+    res = import_result['topology']
+    TopologicalNode = ''
     
+    if name in res:
+        print(name, "is already included, ... create ShortCircuit_Switch with new mRID")
+        name = name + str(list(res.keys()).count("ShortCircuit_Switch") + 1)
+
+    if mRID in res:
+        if 'TopologicalNode' in str(type(res[mRID])):
+            TopologicalNode = res[mRID]
+        elif 'ConnectivityNode' in str(type(res[mRID])):
+            TopologicalNode = res[mRID].TopologicalNode
+
+    if TopologicalNode != '':
+        # Add two Topological Nodes
+        BaseVoltage = TopologicalNode.BaseVoltage
+        v = TopologicalNode.SvVoltage.v
+        angle = TopologicalNode.SvVoltage.angle
+        Node_name = "T1_" + name
+        N_Ground = "N_Ground_" + name
+        import_result = add_TopologicalNode(import_result, "cgmes_v2_4_15", BaseVoltage, v, angle, Node_name)
+        import_result = add_TopologicalNode(import_result, "cgmes_v2_4_15", 0, 0, 0, N_Ground)           # TopologicalNode to ground
+
+        terminal_name = 'Terminal_' + name
+        Conductor_name = 'Conductor_' + name
+        SwitchSchedule_name = 'Schedule_' + name
+        Ground_name = 'Ground_' + name
+
+        # module_name = "cimpy." + version + ".Equipment."
+        module_name = "cimpy." + version + "."
         
+        # Create Terminals
+        terminal_module = importlib.import_module((module_name + 'Terminal'))
+        terminal_class = getattr(terminal_module, 'Terminal')
+        res[terminal_name] = terminal_class(mRID=terminal_name,
+                                            name=terminal_name,
+                                            TopologicalNode=TopologicalNode)
+        
+        terminal_module = importlib.import_module((module_name + 'Terminal'))
+        terminal_class = getattr(terminal_module, 'Terminal')
+        res[terminal_name + "1"] = terminal_class(mRID=terminal_name + "1",
+                                            name=terminal_name + "1",
+                                            TopologicalNode=res[Node_name])
+        
+        terminal_module = importlib.import_module((module_name + 'Terminal'))
+        terminal_class = getattr(terminal_module, 'Terminal')
+        res[terminal_name + "2"] = terminal_class(mRID=terminal_name + "2",
+                                            name=terminal_name + "2",
+                                            TopologicalNode=res[Node_name])
+        
+        terminal_module = importlib.import_module((module_name + 'Terminal'))
+        terminal_class = getattr(terminal_module, 'Terminal')
+        res[terminal_name + "3"] = terminal_class(mRID=terminal_name + "3",
+                                            name=terminal_name + "3",
+                                            TopologicalNode=res[N_Ground])
+        
+        terminal_module = importlib.import_module((module_name + 'Terminal'))
+        terminal_class = getattr(terminal_module, 'Terminal')
+        res[terminal_name + "4"] = terminal_class(mRID=terminal_name + "4",
+                                            name=terminal_name + "4",
+                                            TopologicalNode=res[N_Ground])
+        
+        # Create Components
+        SwitchSchedule_module = importlib.import_module((module_name + 'SwitchSchedule'))
+        SwitchSchedule_class = getattr(SwitchSchedule_module, 'SwitchSchedule')
+        res[SwitchSchedule_name] = SwitchSchedule_class(mRID=SwitchSchedule_name,
+                                name=SwitchSchedule_name,
+                                timeStep = 0.5,    # The time between each pair of subsequent regular time points in sequence order.
+                                endTime = 1)       # The time for the last time point
+        
+        switch_module = importlib.import_module((module_name + 'Switch'))
+        switch_class = getattr(switch_module, 'Switch')
+        res[name] = switch_class(mRID=name,
+                                name=name,
+                                SwitchSchedules = [res[SwitchSchedule_name]],
+                                Terminals = [res[terminal_name], res[terminal_name + "1"]])
+        
+        Conductor_module = importlib.import_module((module_name + 'Conductor'))
+        Conductor_class = getattr(Conductor_module, 'Conductor')
+        res[Conductor_name] = Conductor_class(mRID=Conductor_name,
+                                name=Conductor_name,
+                                Terminals = [res[terminal_name + "2"], res[terminal_name + "3"]] )
+        
+        Ground_module = importlib.import_module((module_name + 'Ground'))
+        Ground_class = getattr(Ground_module, 'Ground')
+        res[Ground_name] = Ground_class(mRID=Ground_name,
+                                name=Ground_name,
+                                Terminals = [res[terminal_name + "4"] ])
+        
+        res[terminal_name].ConductingEquipment = res[name]
+        res[terminal_name + "1"].ConductingEquipment = res[name]
+        res[terminal_name + "2"].ConductingEquipment = res[Conductor_name]
+        res[terminal_name + "3"].ConductingEquipment = res[Conductor_name]
+        res[terminal_name + "4"].ConductingEquipment = res[Ground_name]
+
+    else:
+        print('No Terminal with mRID ', mRID, ' found in object list!')
+        return 0
+
+    import_result['topology'] = res
+
+    return import_result
+
+        
+
+
 
 
 
