@@ -91,6 +91,8 @@ def CIMpyToDPsim(CIM_network, domain, gen_model="3Order"):
                     voltageSetPoint = res[i].RegulatingControl.targetValue * baseVoltage
                 else:
                     voltageSetPoint = baseVoltage
+                
+                slack.set_parameters(voltage_set_point = voltageSetPoint)
             else:
                 baseVoltage = 1
                 for obj in res.values():
@@ -102,11 +104,11 @@ def CIMpyToDPsim(CIM_network, domain, gen_model="3Order"):
                 try:
                     res[i].RegulatingControl.targetValue
                 except:
-                    voltageSetPoint = 0
+                    voltageRef = 0
                 else:
-                    voltageSetPoint = res[i].RegulatingControl.targetValue * baseVoltage
+                    voltageRef = res[i].RegulatingControl.targetValue * baseVoltage
 
-            slack.set_parameters(voltage_set_point = voltageSetPoint)
+                slack.set_parameters(V_ref = voltageRef)
             
             
             Components_Dict[slack.name()] = {"Element": slack, "Nodes": []}
