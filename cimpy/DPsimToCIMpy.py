@@ -124,8 +124,8 @@ def DPsimToCIMpy ( DPsim_system , DPsim_simulation):
             mNominalVoltageEnd2 = float(str(comp.attr("nominal_voltage_end2")))      # Spannung Niederspannungsseite   
 
             #determine the connected Node
-            Node_name = node_of_comp(DPsim_system, name)
-            network = utils.add_PowerTransfomer(network, "cgmes_v2_4_15", Node_name, r, x, mNominalVoltageEnd1, mNominalVoltageEnd2, name)
+            Node_List = nodes_of_comp(DPsim_system, name)
+            network = utils.add_PowerTransfomer(network, "cgmes_v2_4_15", Node_List[0], Node_List[1], r, x, mNominalVoltageEnd1, mNominalVoltageEnd2, name)
 
         elif "SynchronGenerator" and "Order" in str(type(comp)):
             # Synchronous Machine Parameters

@@ -234,7 +234,7 @@ def CIMpyToDPsim(CIM_network, domain, gen_model="3Order"):
             Components_Dict[gen.name()] = {"Element": gen, "Nodes": [], "Sync_Machine": res[i].SynchronousMachine}
             SynchronousMachineTCR_Dict[gen.name()] = res[i].SynchronousMachine            # Saves the connented SynchronousMachine
             
-        elif 'EnergyConsumer' in str(type(res[i])):
+        elif isinstance(res[i], cimpy.cgmes_v2_4_15.EnergyConsumer) or isinstance(res[i], cimpy.cgmes_v2_4_15.ConformLoad):
             # Energy Consumer
             if (domain == Domain.PF):
                 load = dpsimpy_components.Load(res[i].mRID, dpsimpy.LogLevel.debug)
@@ -286,10 +286,16 @@ def CIMpyToDPsim(CIM_network, domain, gen_model="3Order"):
 
         elif isinstance(res[i], cimpy.cgmes_v2_4_15.PowerTransformer):
             transformer = dpsimpy_components.Transformer(res[i].mRID, dpsimpy.LogLevel.debug)
-            if (domain == Domain.PF):
+            if (domain == Domain.PF) or (domain == Domain.SP):
                 # Take baseVoltage of HighVoltage Side (PowerTransformerEnd[0])
-                baseVoltage = res[i].PowerTransformerEnd[0].BaseVoltage.nominalVoltage
+                baseVoltage = res[i].PowerTransformerEnd[0].ratedU
                 transformer.set_base_voltage(baseVoltage)
+
+                nv1 = float(str(res[i].PowerTransformerEnd[0].ratedU))
+                nv2 = float(str(res[i].PowerTransformerEnd[1].ratedU))
+                r = float(str(res[i].PowerTransformerEnd[0].r))
+                i = float(str(res[i].PowerTransformerEnd[0].x))
+                transformer.set_parameters(nom_voltage_end_1 = nv1, nom_voltage_end_2 = nv2,ratio_abs = 0, ratio_phase = 0, resistance = r, inductance = i)
 
             Components_Dict[transformer.name()] = {"Element": transformer, "Nodes": []}
 

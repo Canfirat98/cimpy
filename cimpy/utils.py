@@ -1,5 +1,6 @@
 import importlib
 import uuid
+import datetime
 import cimpy.cgmes_v2_4_15.TopologicalNode
 
 def node_breaker_to_bus_branch(import_result):
@@ -427,22 +428,31 @@ def add_EnergyConsumer(import_result, version, mRID, p, q, BaseVoltage, name = "
     return import_result    
 
 
-def add_PowerTransfomer(import_result, version, mRID, r, x, mNominalVoltageEnd1, mNominalVoltageEnd2, name = "PowerTransformer"):
+def add_PowerTransfomer(import_result, version, mRID_1, mRID_2, r, x, mNominalVoltageEnd1, mNominalVoltageEnd2, name = "PowerTransformer"):
     res = import_result['topology']
-    TopologicalNode = ''
     
     if name in res:
         print(name, "is already included, ... create PowerTransformer with new mRID")
         name = name + str(list(res.keys()).count("PowerTransformer") + 1)
 
-    if mRID in res:
-        if 'TopologicalNode' in str(type(res[mRID])):
-            TopologicalNode = res[mRID]
-        elif 'ConnectivityNode' in str(type(res[mRID])):
-            TopologicalNode = res[mRID].TopologicalNode.mRID
+    TopologicalNode1 = ''
+    TopologicalNode2 = ''
+    if mRID_1 in res:
+        if 'TopologicalNode' in str(type(res[mRID_1])):
+            TopologicalNode1 = res[mRID_1]
+        elif 'ConnectivityNode' in str(type(res[mRID_1])):
+            TopologicalNode1 = res[mRID_1].TopologicalNode.mRID
 
-    if TopologicalNode != '':
-        terminal_name = 'Terminal_' + name 
+    if mRID_2 in res:
+        if 'TopologicalNode' in str(type(res[mRID_2])):
+            TopologicalNode2 = res[mRID_2]
+        elif 'ConnectivityNode' in str(type(res[mRID_2])):
+            TopologicalNode2 = res[mRID_2].TopologicalNode.mRID
+    
+
+    if TopologicalNode1 != '' and TopologicalNode2 != '':
+        terminal_name1 = 'Terminal_1_' + name 
+        terminal_name2 = 'Terminal_2_' + name 
         HVSide_name = name + "-HVSide"
         LVSide_name = name + "-LVSide"
         
@@ -452,14 +462,21 @@ def add_PowerTransfomer(import_result, version, mRID, r, x, mNominalVoltageEnd1,
         
         terminal_module = importlib.import_module((module_name + 'Terminal'))
         terminal_class = getattr(terminal_module, 'Terminal')
-        res[terminal_name] = terminal_class(mRID=terminal_name,
-                                            name=terminal_name,
-                                            TopologicalNode=TopologicalNode)
+        res[terminal_name1] = terminal_class(mRID=terminal_name1,
+                                            name=terminal_name1,
+                                            TopologicalNode=TopologicalNode1)
+        
+        terminal_module = importlib.import_module((module_name + 'Terminal'))
+        terminal_class = getattr(terminal_module, 'Terminal')
+        res[terminal_name2] = terminal_class(mRID=terminal_name2,
+                                            name=terminal_name2,
+                                            TopologicalNode=TopologicalNode2)
         
         PowerTransformer_module = importlib.import_module((module_name + 'PowerTransformer'))
         PowerTransformer_class = getattr(PowerTransformer_module, 'PowerTransformer')
         res[name] = PowerTransformer_class(mRID=name,
-                                name=name)
+                                name=name,
+                                Terminals = [res[terminal_name1], res[terminal_name2]])
         
         HVSide_module = importlib.import_module((module_name + 'PowerTransformerEnd'))
         HVSide_class = getattr(HVSide_module, 'PowerTransformerEnd')
@@ -469,7 +486,7 @@ def add_PowerTransfomer(import_result, version, mRID, r, x, mNominalVoltageEnd1,
                                         r=r,
                                         x=x,
                                         endNumber=1,
-                                        Terminal=res[terminal_name],
+                                        Terminal=res[terminal_name1],
                                         PowerTransformer=res[name] )
         
         LVSide_module = importlib.import_module((module_name + 'PowerTransformerEnd'))
@@ -478,17 +495,24 @@ def add_PowerTransfomer(import_result, version, mRID, r, x, mNominalVoltageEnd1,
                                         name=LVSide_name,
                                         ratedU=mNominalVoltageEnd2,
                                         endNumber=2,
-                                        Terminal=res[terminal_name],
+                                        Terminal=res[terminal_name2],
                                         PowerTransformer=res[name] )
         
         res[name].PowerTransformerEnd = [res[HVSide_name], res[LVSide_name]]
 
-        res[terminal_name].ConductingEquipment = res[name]
+        res[terminal_name1].ConductingEquipment = res[name]
+        res[terminal_name2].ConductingEquipment = res[name]
    
-        # Append the Terminal List of the TopologicalNode
-        res[mRID].Terminal.append(res[terminal_name])
-    else:
-        print('No Terminal with mRID ', mRID, ' found in object list!')
+        # Append the Terminal List of the TopologicalNodes
+        res[mRID_1].Terminal.append(res[terminal_name1])
+        res[mRID_2].Terminal.append(res[terminal_name2])
+
+    if TopologicalNode1 == '':
+        print('No Terminal with first mRID ', mRID_1, ' found in object list!')
+        return 0
+
+    if TopologicalNode2 == '':
+        print('No Terminal with second mRID ', mRID_2, ' found in object list!')
         return 0
 
     import_result['topology'] = res
@@ -526,15 +550,12 @@ def add_ShortCircuit_Switch(import_result, version, mRID, name = "ShortCircuit_S
         BaseVoltage = TopologicalNode.BaseVoltage
         v = TopologicalNode.SvVoltage.v
         angle = TopologicalNode.SvVoltage.angle
-        Node_name = "T1_" + name
-        N_Ground = "N_Ground_" + name
+        Node_name = "Node_" + name
         import_result = add_TopologicalNode(import_result, "cgmes_v2_4_15", BaseVoltage, v, angle, Node_name)
-        import_result = add_TopologicalNode(import_result, "cgmes_v2_4_15", 0, 0, 0, N_Ground)           # TopologicalNode to ground
 
         terminal_name = 'Terminal_' + name
-        Conductor_name = 'Conductor_' + name
-        SwitchSchedule_name = 'Schedule_' + name
-        Ground_name = 'Ground_' + name
+        SwitchSchedule_name = 'Schedule_' + name 
+        GroundingImpedance_name = 'GroundingImpedance_' + name
 
         # module_name = "cimpy." + version + ".Equipment."
         module_name = "cimpy." + version + "."
@@ -558,25 +579,15 @@ def add_ShortCircuit_Switch(import_result, version, mRID, name = "ShortCircuit_S
                                             name=terminal_name + "2",
                                             TopologicalNode=res[Node_name])
         
-        terminal_module = importlib.import_module((module_name + 'Terminal'))
-        terminal_class = getattr(terminal_module, 'Terminal')
-        res[terminal_name + "3"] = terminal_class(mRID=terminal_name + "3",
-                                            name=terminal_name + "3",
-                                            TopologicalNode=res[N_Ground])
-        
-        terminal_module = importlib.import_module((module_name + 'Terminal'))
-        terminal_class = getattr(terminal_module, 'Terminal')
-        res[terminal_name + "4"] = terminal_class(mRID=terminal_name + "4",
-                                            name=terminal_name + "4",
-                                            TopologicalNode=res[N_Ground])
-        
+
         # Create Components
         SwitchSchedule_module = importlib.import_module((module_name + 'SwitchSchedule'))
         SwitchSchedule_class = getattr(SwitchSchedule_module, 'SwitchSchedule')
         res[SwitchSchedule_name] = SwitchSchedule_class(mRID=SwitchSchedule_name,
                                 name=SwitchSchedule_name,
-                                timeStep = 0.5,    # The time between each pair of subsequent regular time points in sequence order.
-                                endTime = 1)       # The time for the last time point
+                                startTime = datetime.datetime.now(),
+                               # timeStep = 0.5,    # The time between each pair of subsequent regular time points in sequence order.
+                                endTime = datetime.datetime.now() + datetime.timedelta(seconds=10))       # The time for the last time point
         
         switch_module = importlib.import_module((module_name + 'Switch'))
         switch_class = getattr(switch_module, 'Switch')
@@ -585,23 +596,22 @@ def add_ShortCircuit_Switch(import_result, version, mRID, name = "ShortCircuit_S
                                 SwitchSchedules = [res[SwitchSchedule_name]],
                                 Terminals = [res[terminal_name], res[terminal_name + "1"]])
         
-        Conductor_module = importlib.import_module((module_name + 'Conductor'))
-        Conductor_class = getattr(Conductor_module, 'Conductor')
-        res[Conductor_name] = Conductor_class(mRID=Conductor_name,
-                                name=Conductor_name,
-                                Terminals = [res[terminal_name + "2"], res[terminal_name + "3"]] )
+        GroundingImpedance_module = importlib.import_module((module_name + 'GroundingImpedance'))
+        GroundingImpedance_class = getattr(GroundingImpedance_module, 'GroundingImpedance')
+        res[GroundingImpedance_name] = GroundingImpedance_class(mRID=GroundingImpedance_name,
+                                name=GroundingImpedance_name,
+                                r = 10e-10,
+                                Terminals = [res[terminal_name + "2"]])
         
-        Ground_module = importlib.import_module((module_name + 'Ground'))
-        Ground_class = getattr(Ground_module, 'Ground')
-        res[Ground_name] = Ground_class(mRID=Ground_name,
-                                name=Ground_name,
-                                Terminals = [res[terminal_name + "4"] ])
         
         res[terminal_name].ConductingEquipment = res[name]
         res[terminal_name + "1"].ConductingEquipment = res[name]
-        res[terminal_name + "2"].ConductingEquipment = res[Conductor_name]
-        res[terminal_name + "3"].ConductingEquipment = res[Conductor_name]
-        res[terminal_name + "4"].ConductingEquipment = res[Ground_name]
+        res[terminal_name + "2"].ConductingEquipment = res[GroundingImpedance_name] 
+
+        # Append the Terminal List of the TopologicalNode
+        res[mRID].Terminal.append(res[terminal_name])
+        res[Node_name].Terminal.append(res[terminal_name + "1"])
+        res[Node_name].Terminal.append(res[terminal_name + "2"])
 
     else:
         print('No Terminal with mRID ', mRID, ' found in object list!')
@@ -634,15 +644,12 @@ def add_OpenClamp_Switch(import_result, version, mRID, name = "OpenClamp_Switch"
         BaseVoltage = TopologicalNode.BaseVoltage
         v = TopologicalNode.SvVoltage.v
         angle = TopologicalNode.SvVoltage.angle
-        Node_name = "T1_" + name
-        N_Ground = "N_Ground_" + name
+        Node_name = "Node_" + name
         import_result = add_TopologicalNode(import_result, "cgmes_v2_4_15", BaseVoltage, v, angle, Node_name)
-        import_result = add_TopologicalNode(import_result, "cgmes_v2_4_15", 0, 0, 0, N_Ground)           # TopologicalNode to ground
 
         terminal_name = 'Terminal_' + name
-        Conductor_name = 'Conductor_' + name
-        SwitchSchedule_name = 'Schedule_' + name
-        Ground_name = 'Ground_' + name
+        SwitchSchedule_name = 'Schedule_' + name 
+        GroundingImpedance_name = 'GroundingImpedance_' + name
 
         # module_name = "cimpy." + version + ".Equipment."
         module_name = "cimpy." + version + "."
@@ -666,18 +673,7 @@ def add_OpenClamp_Switch(import_result, version, mRID, name = "OpenClamp_Switch"
                                             name=terminal_name + "2",
                                             TopologicalNode=res[Node_name])
         
-        terminal_module = importlib.import_module((module_name + 'Terminal'))
-        terminal_class = getattr(terminal_module, 'Terminal')
-        res[terminal_name + "3"] = terminal_class(mRID=terminal_name + "3",
-                                            name=terminal_name + "3",
-                                            TopologicalNode=res[N_Ground])
-        
-        terminal_module = importlib.import_module((module_name + 'Terminal'))
-        terminal_class = getattr(terminal_module, 'Terminal')
-        res[terminal_name + "4"] = terminal_class(mRID=terminal_name + "4",
-                                            name=terminal_name + "4",
-                                            TopologicalNode=res[N_Ground])
-        
+
         # Create Components
         SwitchSchedule_module = importlib.import_module((module_name + 'SwitchSchedule'))
         SwitchSchedule_class = getattr(SwitchSchedule_module, 'SwitchSchedule')
@@ -693,23 +689,22 @@ def add_OpenClamp_Switch(import_result, version, mRID, name = "OpenClamp_Switch"
                                 SwitchSchedules = [res[SwitchSchedule_name]],
                                 Terminals = [res[terminal_name], res[terminal_name + "1"]])
         
-        Conductor_module = importlib.import_module((module_name + 'Conductor'))
-        Conductor_class = getattr(Conductor_module, 'Conductor')
-        res[Conductor_name] = Conductor_class(mRID=Conductor_name,
-                                name=Conductor_name,
-                                Terminals = [res[terminal_name + "2"], res[terminal_name + "3"]] )
+        GroundingImpedance_module = importlib.import_module((module_name + 'GroundingImpedance'))
+        GroundingImpedance_class = getattr(GroundingImpedance_module, 'GroundingImpedance')
+        res[GroundingImpedance_name] = GroundingImpedance_class(mRID=GroundingImpedance_name,
+                                name=GroundingImpedance_name,
+                                r = 10e10,
+                                Terminals = [res[terminal_name + "2"]])
         
-        Ground_module = importlib.import_module((module_name + 'Ground'))
-        Ground_class = getattr(Ground_module, 'Ground')
-        res[Ground_name] = Ground_class(mRID=Ground_name,
-                                name=Ground_name,
-                                Terminals = [res[terminal_name + "4"] ])
         
         res[terminal_name].ConductingEquipment = res[name]
         res[terminal_name + "1"].ConductingEquipment = res[name]
-        res[terminal_name + "2"].ConductingEquipment = res[Conductor_name]
-        res[terminal_name + "3"].ConductingEquipment = res[Conductor_name]
-        res[terminal_name + "4"].ConductingEquipment = res[Ground_name]
+        res[terminal_name + "2"].ConductingEquipment = res[GroundingImpedance_name] 
+
+        # Append the Terminal List of the TopologicalNode
+        res[mRID].Terminal.append(res[terminal_name])
+        res[Node_name].Terminal.append(res[terminal_name + "1"])
+        res[Node_name].Terminal.append(res[terminal_name + "2"])
 
     else:
         print('No Terminal with mRID ', mRID, ' found in object list!')
@@ -718,8 +713,3 @@ def add_OpenClamp_Switch(import_result, version, mRID, name = "OpenClamp_Switch"
     import_result['topology'] = res
 
     return import_result
-
-
-
-
-
