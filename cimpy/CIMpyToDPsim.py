@@ -56,6 +56,8 @@ def CIMpyToDPsim(CIM_network, domain, gen_model="3Order"):
             if (domain == Domain.PF):
                 # Set BaseVoltage of ACLineSegment to PiLine
                 baseVoltage = res[i].BaseVoltage.nominalVoltage
+                if 'kV' in getattr( res[i].BaseVoltage, "name" ):
+                    baseVoltage *= 1000
                 pi_line.set_base_voltage(baseVoltage)
 
             Components_Dict[pi_line.name()] = {"Element": pi_line, "Nodes": []}
@@ -73,6 +75,8 @@ def CIMpyToDPsim(CIM_network, domain, gen_model="3Order"):
                             for comp in obj.ConductingEquipment:
                                 if comp.mRID == slack.name():
                                     baseVoltage = obj.BaseVoltage.nominalVoltage
+                                    if 'kV' in getattr( obj.BaseVoltage, "name" ):          # check unit
+                                        baseVoltage *= 1000
                                     break
 
                 if (baseVoltage == 0):
@@ -82,6 +86,8 @@ def CIMpyToDPsim(CIM_network, domain, gen_model="3Order"):
                                 for term in obj.Terminal:
                                     if term.ConductingEquipment.mRID == slack.name():
                                         baseVoltage = obj.BaseVoltage.nominalVoltage
+                                        if 'kV' in getattr( obj.BaseVoltage, "name" ):      # check unit
+                                            baseVoltage *= 1000
                                         break
                 if (baseVoltage == 0):
                     baseVoltage = 1
@@ -100,6 +106,8 @@ def CIMpyToDPsim(CIM_network, domain, gen_model="3Order"):
                         for term in obj.Terminal:
                             if term.ConductingEquipment.mRID == slack.name():
                                 baseVoltage = obj.BaseVoltage.nominalVoltage
+                                if 'kV' in getattr( obj.BaseVoltage, "name" ):      # check unit
+                                    baseVoltage *= 1000
                                 break
                 try:
                     res[i].RegulatingControl.targetValue
@@ -181,6 +189,8 @@ def CIMpyToDPsim(CIM_network, domain, gen_model="3Order"):
                     for term in obj.Terminal:
                         if term.ConductingEquipment.mRID == gen_pf.name():
                             baseVoltage = obj.BaseVoltage.nominalVoltage
+                            if 'kV' in getattr( obj.BaseVoltage, "name" ):      # check unit
+                                baseVoltage *= 1000
                             break
             gen_pf.set_base_voltage(baseVoltage)
 
@@ -238,7 +248,7 @@ def CIMpyToDPsim(CIM_network, domain, gen_model="3Order"):
             # Energy Consumer
             if (domain == Domain.PF):
                 load = dpsimpy_components.Load(res[i].mRID, dpsimpy.LogLevel.debug)
-                load.modify_power_flow_bus_type(dpsimpy.PowerflowBusType.PV)
+                #load.modify_power_flow_bus_type(dpsimpy.PowerflowBusType.PV)
                 p = getattr(res[i], "p", 0)
                 q = getattr(res[i], "q", 0)
                 if p == 0 and q == 0:
@@ -251,7 +261,20 @@ def CIMpyToDPsim(CIM_network, domain, gen_model="3Order"):
                     if p == 0 and q == 0:
                         print("Fehler mit p und q")
                         raise Exception("ERROR")
-                load.set_parameters(p, q)
+                    
+                for obj in res.values():
+                    if isinstance(obj, cimpy.cgmes_v2_4_15.SvVoltage):
+                        for term in obj.TopologicalNode.Terminal:
+                            if term.ConductingEquipment.mRID == load.name():
+                                nom_voltage = getattr(obj, "v", 0)
+                                break
+                if nom_voltage == 0:
+                    nom_voltage= res[i].BaseVoltage.nominalVoltage
+                    if 'kV' in getattr( res[i].BaseVoltage, "name" ):      # check unit
+                        nom_voltage *= 1000
+
+                load.set_parameters(p, q, nom_voltage)
+                #load.set_parameters(p, q)
             elif (domain == Domain.SP):
                 load = dpsimpy_components.Load(res[i].mRID, dpsimpy.LogLevel.debug)
             else:
@@ -280,6 +303,8 @@ def CIMpyToDPsim(CIM_network, domain, gen_model="3Order"):
                                 break
                 if nom_voltage == 0:
                     nom_voltage= res[i].BaseVoltage.nominalVoltage
+                    if 'kV' in getattr( res[i].BaseVoltage, "name" ):      # check unit
+                        nom_voltage *= 1000
                 load.set_parameters(p, q, nom_voltage)
 
             Components_Dict[load.name()] = {"Element": load, "Nodes": []}
