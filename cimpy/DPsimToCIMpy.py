@@ -20,14 +20,14 @@ def node_of_comp(self, comp_name):
     
     comp_ptr = None
     for comp in self.components:
-        if comp.name()== comp_name:
+        if comp.uid== comp_name:
             comp_ptr = comp
 
     obj_dict = self.components_at_node
     node_name = []
     for node, comp in obj_dict.items():
         if (comp_ptr in comp):
-            node_name = node.name()
+            node_name = node.uid
 
     return node_name
 
@@ -41,14 +41,14 @@ def nodes_of_comp(self, comp_name):
     
     comp_ptr = None
     for comp in self.components:
-        if comp.name()== comp_name:
+        if comp.uid== comp_name:
             comp_ptr = comp
 
     obj_dict = self.components_at_node
     node_list = []
     for node, comp in obj_dict.items():
         if (comp_ptr in comp):
-            node_list.append(node.name())
+            node_list.append(node.uid)
 
     return node_list
 
@@ -69,16 +69,16 @@ def DPsimToCIMpy ( DPsim_system , DPsim_simulation):
     B1 = utils.create_BaseVoltage(24000)
 
     for node in DPsim_system.nodes:
-        v = np.linalg.norm( DPsim_simulation.get_idobj_attr(node.name(), 'v').get()[0] )                        # Betrag SvVoltage
-        angle = cmath.phase( DPsim_simulation.get_idobj_attr(node.name(), 'v').get()[0] )        #Phase von SvVoltage
-        network = utils.add_TopologicalNode(network, "cgmes_v2_4_15", B1, v, angle, node.name())
+        v = np.linalg.norm( DPsim_simulation.get_idobj_attr(node.uid, 'v').get()[0] )                        # Betrag SvVoltage
+        angle = cmath.phase( DPsim_simulation.get_idobj_attr(node.uid, 'v').get()[0] )        #Phase von SvVoltage
+        network = utils.add_TopologicalNode(network, "cgmes_v2_4_15", B1, v, angle, node.uid)
         
 
     for comp in DPsim_system.components:
         if "PiLine" in str(type(comp)):
             # create ACLineSegment
             # PiLine Parameters
-            name = comp.name()
+            name = comp.uid
             r = float(str(comp.attr("R_series")))
             x= float(str(comp.attr("L_series"))) * (2*pi*frequency)
             bch= float(str(comp.attr("C_parallel"))) * (2*pi*frequency)
@@ -90,7 +90,7 @@ def DPsimToCIMpy ( DPsim_system , DPsim_simulation):
 
         elif "NetworkInjection" in str(type(comp)):
             # determine the connected Node
-            Node_name = node_of_comp(DPsim_system, comp.name())
+            Node_name = node_of_comp(DPsim_system, comp.uid)
             network = utils.add_external_network_injection(network, "cgmes_v2_4_15", Node_name, 1)
         
         elif isinstance(comp, dpsimpy.sp.ph1.SynchronGenerator):
@@ -101,7 +101,7 @@ def DPsimToCIMpy ( DPsim_system , DPsim_simulation):
             ratedU = float(str(comp.attr("base_Voltage")))
             targetValue = float(str(comp.attr("V_set")))
             initialP = float(str(comp.attr("P_set_pu")))
-            name = comp.name()
+            name = comp.uid
 
             #determine the connected Node
             Node_name = node_of_comp(DPsim_system, name)
@@ -109,7 +109,7 @@ def DPsimToCIMpy ( DPsim_system , DPsim_simulation):
 
         elif "Load" in str(type(comp)):
             # Load Parameters
-            name = comp.name()
+            name = comp.uid
 
             #determine the connected Node
             Node_name = node_of_comp(DPsim_system, name)
@@ -117,7 +117,7 @@ def DPsimToCIMpy ( DPsim_system , DPsim_simulation):
 
         elif "Transformer" in str(type(comp)):
             # Transfomer Parameters
-            name = comp.name()
+            name = comp.uid
             r = float(str(comp.attr("R")))                               # Widerstand
             x = float(str(comp.attr("L")))                               # Induktivität
             mNominalVoltageEnd1 = float(str(comp.attr("nominal_voltage_end1")))      # Spannung Hochspannungsseite   
@@ -135,7 +135,7 @@ def DPsimToCIMpy ( DPsim_system , DPsim_simulation):
             ratedU = float(str(getattr(comp, "Vnom", 0)))
             targetValue = float(str( np.linalg.norm(comp.InitVoltage) / comp.Vnom )) # ??? InitVoltage ist komplex, soll ich den Betrag nehmen ???
             initialP = float(str( comp.attr("initElecPower").derive_real() ))
-            Sync_generator_name = comp.name()
+            Sync_generator_name = comp.uid
 
             #determine the connected Node
             Node_name = node_of_comp(DPsim_system, Sync_generator_name)

@@ -49,6 +49,7 @@ def CIMpyToDPsim(CIM_network, domain, gen_model="3Order"):
         if 'ACLineSegment' in str(type(res[i])):
             # PiLine
             pi_line = dpsimpy_components.PiLine(res[i].mRID, dpsimpy.LogLevel.debug)
+            pi_line.name = res[i].name
             pi_line.set_parameters(R= res[i].r,                             #line resistance                         
                                 L=res[i].x/(2*numpy.pi*frequency),          #line inductance
                                 C=res[i].bch/(2*numpy.pi*frequency),        #line capacitance
@@ -60,20 +61,20 @@ def CIMpyToDPsim(CIM_network, domain, gen_model="3Order"):
                     baseVoltage *= 1000
                 pi_line.set_base_voltage(baseVoltage)
 
-            Components_Dict[pi_line.name()] = {"Element": pi_line, "Nodes": []}
+            Components_Dict[pi_line.uid] = {"Element": pi_line, "Nodes": []}
             
 
         elif 'ExternalNetworkInjection' in str(type(res[i])):
             # Slack
             slack = dpsimpy_components.NetworkInjection(res[i].mRID, dpsimpy.LogLevel.debug)
-            
+            slack.name = res[i].name
             if (domain == Domain.PF):
                 baseVoltage = 0
                 for obj in res.values():
                     if isinstance(obj , cimpy.cgmes_v2_4_15.BaseVoltage):
                         if obj.ConductingEquipment != 'list':
                             for comp in obj.ConductingEquipment:
-                                if comp.mRID == slack.name():
+                                if comp.mRID == slack.uid:
                                     baseVoltage = obj.BaseVoltage.nominalVoltage
                                     if 'kV' in getattr( obj.BaseVoltage, "name" ):          # check unit
                                         baseVoltage *= 1000
@@ -84,7 +85,7 @@ def CIMpyToDPsim(CIM_network, domain, gen_model="3Order"):
                     for obj in res.values():
                         if isinstance(obj, cimpy.cgmes_v2_4_15.TopologicalNode):
                                 for term in obj.Terminal:
-                                    if term.ConductingEquipment.mRID == slack.name():
+                                    if term.ConductingEquipment.mRID == slack.uid:
                                         baseVoltage = obj.BaseVoltage.nominalVoltage
                                         if 'kV' in getattr( obj.BaseVoltage, "name" ):      # check unit
                                             baseVoltage *= 1000
@@ -104,7 +105,7 @@ def CIMpyToDPsim(CIM_network, domain, gen_model="3Order"):
                 for obj in res.values():
                     if isinstance(obj, cimpy.cgmes_v2_4_15.TopologicalNode):
                         for term in obj.Terminal:
-                            if term.ConductingEquipment.mRID == slack.name():
+                            if term.ConductingEquipment.mRID == slack.uid:
                                 baseVoltage = obj.BaseVoltage.nominalVoltage
                                 if 'kV' in getattr( obj.BaseVoltage, "name" ):      # check unit
                                     baseVoltage *= 1000
@@ -119,10 +120,11 @@ def CIMpyToDPsim(CIM_network, domain, gen_model="3Order"):
                 slack.set_parameters(V_ref = voltageRef)
             
             
-            Components_Dict[slack.name()] = {"Element": slack, "Nodes": []}
+            Components_Dict[slack.uid] = {"Element": slack, "Nodes": []}
 
         elif isinstance(res[i], cimpy.cgmes_v2_4_15.SynchronousMachine) and domain == Domain.PF:
             gen_pf = dpsimpy.sp.ph1.SynchronGenerator(res[i].mRID, dpsimpy.LogLevel.debug)
+            gen_pf.name = res[i].name
             try:
                 res[i].ratedS
             except:
@@ -187,7 +189,7 @@ def CIMpyToDPsim(CIM_network, domain, gen_model="3Order"):
             for obj in res.values():
                 if isinstance(obj, cimpy.cgmes_v2_4_15.TopologicalNode):
                     for term in obj.Terminal:
-                        if term.ConductingEquipment.mRID == gen_pf.name():
+                        if term.ConductingEquipment.mRID == gen_pf.uid:
                             baseVoltage = obj.BaseVoltage.nominalVoltage
                             if 'kV' in getattr( obj.BaseVoltage, "name" ):      # check unit
                                 baseVoltage *= 1000
@@ -196,7 +198,7 @@ def CIMpyToDPsim(CIM_network, domain, gen_model="3Order"):
 
             gen_pf.modify_power_flow_bus_type(dpsimpy.PowerflowBusType.PV)
 
-            Components_Dict[gen_pf.name()] = {"Element": gen_pf, "Nodes": []}
+            Components_Dict[gen_pf.uid] = {"Element": gen_pf, "Nodes": []}
             
 
         
@@ -212,18 +214,22 @@ def CIMpyToDPsim(CIM_network, domain, gen_model="3Order"):
             Td0_t=float(str(res[i].tpdo))
             if (gen_model=="3Order"):      
                 gen = dpsimpy_components.SynchronGenerator3OrderVBR(res[i].mRID, dpsimpy.LogLevel.debug)
+                gen.name = res[i].name
                 gen.set_operational_parameters_per_unit(nom_power=nom_power, nom_voltage=nom_voltage, nom_frequency=frequency, H=H,
                                                         Ld=Ld, Lq=Lq, L0=L0, Ld_t=Ld_t, Td0_t=Td0_t)
             elif (gen_model=="4Order"):
                 gen = dpsimpy_components.SynchronGenerator4OrderVBR(res[i].mRID, dpsimpy.LogLevel.debug)
+                gen.name = res[i].name
                 gen.set_operational_parameters_per_unit(nom_power=nom_power, nom_voltage=nom_voltage, nom_frequency=frequency, H=res[i].inertia,
                                                         Ld=res[i].xDirectSync, Lq=res[i].xQuadSync, L0=L0, Ld_t=res[i].xDirectTrans, Lq_t=res[i].xQuadTrans, Td0_t=res[i].tpdo, Tq0_t=res[i].tpqo)		
             elif (gen_model=="6aOrder"):
                 gen = dpsimpy_components.SynchronGenerator6aOrderVBR(res[i].mRID, dpsimpy.LogLevel.debug)
+                gen.name = res[i].name
                 gen.set_operational_parameters_per_unit(nom_power=nom_power, nom_voltage=nom_voltage, nom_frequency=frequency, H=res[i].inertia, Ld=res[i].xDirectSync, Lq=res[i].xQuadSync, L0=L0, Ld_t=res[i].xDirectTrans, Lq_t=res[i].xQuadTrans, Td0_t=res[i].tpdo, Tq0_t=res[i].tpqo,
                                                         Ld_s=res[i].xDirectSubtrans, Lq_s=res[i].xQuadSubtrans, Td0_s=res[i].tppdo, Tq0_s=res[i].tppqo)	
             elif (gen_model=="6bOrder"):
                 gen = dpsimpy_components.SynchronGenerator6bOrderVBR(res[i].mRID, dpsimpy.LogLevel.debug)
+                gen.name = res[i].name
                 gen.set_operational_parameters_per_unit(nom_power=nom_power, nom_voltage=nom_voltage, nom_frequency=frequency, H=res[i].inertia, Ld=res[i].xDirectSync, Lq=res[i].xQuadSync, L0=L0, Ld_t=res[i].xDirectTrans, Lq_t=res[i].xQuadTrans, Td0_t=res[i].tpdo, Tq0_t=res[i].tpqo,
                                                         Ld_s=res[i].xDirectSubtrans, Lq_s=res[i].xQuadSubtrans, Td0_s=res[i].tppdo, Tq0_s=res[i].tppqo)	
             
@@ -241,20 +247,21 @@ def CIMpyToDPsim(CIM_network, domain, gen_model="3Order"):
             gen.set_initial_values(init_complex_electrical_power=init_electrical_power, init_mechanical_power=init_mechanical_power, 
                            init_complex_terminal_voltage=init_complex_terminal_voltage)
             
-            Components_Dict[gen.name()] = {"Element": gen, "Nodes": [], "Sync_Machine": res[i].SynchronousMachine}
-            SynchronousMachineTCR_Dict[gen.name()] = res[i].SynchronousMachine            # Saves the connented SynchronousMachine
+            Components_Dict[gen.uid] = {"Element": gen, "Nodes": [], "Sync_Machine": res[i].SynchronousMachine}
+            SynchronousMachineTCR_Dict[gen.uid] = res[i].SynchronousMachine            # Saves the connented SynchronousMachine
             
         elif isinstance(res[i], cimpy.cgmes_v2_4_15.EnergyConsumer) or isinstance(res[i], cimpy.cgmes_v2_4_15.ConformLoad):
             # Energy Consumer
             if (domain == Domain.PF):
                 load = dpsimpy_components.Load(res[i].mRID, dpsimpy.LogLevel.debug)
+                load.name = res[i].name
                 #load.modify_power_flow_bus_type(dpsimpy.PowerflowBusType.PV)
                 p = getattr(res[i], "p", 0)
                 q = getattr(res[i], "q", 0)
                 if p == 0 and q == 0:
                     for obj in res.values():
                         if isinstance(obj, cimpy.cgmes_v2_4_15.SvPowerFlow):
-                            if obj.Terminal.ConductingEquipment.mRID == load.name():
+                            if obj.Terminal.ConductingEquipment.mRID == load.uid:
                                 p = getattr(obj, "p", 0)
                                 q = getattr(obj, "q", 0)
                                 break
@@ -265,7 +272,7 @@ def CIMpyToDPsim(CIM_network, domain, gen_model="3Order"):
                 for obj in res.values():
                     if isinstance(obj, cimpy.cgmes_v2_4_15.SvVoltage):
                         for term in obj.TopologicalNode.Terminal:
-                            if term.ConductingEquipment.mRID == load.name():
+                            if term.ConductingEquipment.mRID == load.uid:
                                 nom_voltage = getattr(obj, "v", 0)
                                 break
                 if nom_voltage == 0:
@@ -277,8 +284,10 @@ def CIMpyToDPsim(CIM_network, domain, gen_model="3Order"):
                 #load.set_parameters(p, q)
             elif (domain == Domain.SP):
                 load = dpsimpy_components.Load(res[i].mRID, dpsimpy.LogLevel.debug)
+                load.name = res[i].name
             else:
                 load = dpsimpy_components.RXLoad(res[i].mRID, dpsimpy.LogLevel.debug)
+                load.name = res[i].name
 
 
             if (domain != Domain.PF):                   # Only for domains: SP, DP and EMT
@@ -287,7 +296,7 @@ def CIMpyToDPsim(CIM_network, domain, gen_model="3Order"):
                 if p == 0 and q == 0:
                     for obj in res.values():
                         if isinstance(obj, cimpy.cgmes_v2_4_15.SvPowerFlow):
-                            if obj.Terminal.ConductingEquipment.mRID == load.name():
+                            if obj.Terminal.ConductingEquipment.mRID == load.uid:
                                 p = getattr(obj, "p", 0)
                                 q = getattr(obj, "q", 0)
                                 break
@@ -298,7 +307,7 @@ def CIMpyToDPsim(CIM_network, domain, gen_model="3Order"):
                 for obj in res.values():
                     if isinstance(obj, cimpy.cgmes_v2_4_15.SvVoltage):
                         for term in obj.TopologicalNode.Terminal:
-                            if term.ConductingEquipment.mRID == load.name():
+                            if term.ConductingEquipment.mRID == load.uid:
                                 nom_voltage = getattr(obj, "v", 0)
                                 break
                 if nom_voltage == 0:
@@ -307,10 +316,11 @@ def CIMpyToDPsim(CIM_network, domain, gen_model="3Order"):
                         nom_voltage *= 1000
                 load.set_parameters(p, q, nom_voltage)
 
-            Components_Dict[load.name()] = {"Element": load, "Nodes": []}
+            Components_Dict[load.uid] = {"Element": load, "Nodes": []}
 
         elif isinstance(res[i], cimpy.cgmes_v2_4_15.PowerTransformer):
             transformer = dpsimpy_components.Transformer(res[i].mRID, dpsimpy.LogLevel.debug)
+            transformer.name = res[i].name
             if (domain == Domain.PF) or (domain == Domain.SP):
                 # Take baseVoltage of HighVoltage Side (PowerTransformerEnd[0])
                 baseVoltage = res[i].PowerTransformerEnd[0].ratedU
@@ -322,7 +332,7 @@ def CIMpyToDPsim(CIM_network, domain, gen_model="3Order"):
                 i = float(str(res[i].PowerTransformerEnd[0].x))
                 transformer.set_parameters(nom_voltage_end_1 = nv1, nom_voltage_end_2 = nv2,ratio_abs = 0, ratio_phase = 0, resistance = r, inductance = i)
 
-            Components_Dict[transformer.name()] = {"Element": transformer, "Nodes": []}
+            Components_Dict[transformer.uid] = {"Element": transformer, "Nodes": []}
 
     
 
@@ -330,7 +340,8 @@ def CIMpyToDPsim(CIM_network, domain, gen_model="3Order"):
         ### Nodes
         if 'TopologicalNode' in str(type(res[j])): 
             n1 = dpsimpy.sp.SimNode(res[j].mRID, dpsimpy.PhaseType.Single)
-            Nodes[n1.name()] = n1
+            n1.name = res[j].name
+            Nodes[n1.uid] = n1
             Terminals = res[j].Terminal
             for terminal in Terminals:                         # search for connected Components via Terminals
                 component_mRID = terminal.ConductingEquipment.mRID
