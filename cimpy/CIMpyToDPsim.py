@@ -330,7 +330,7 @@ def CIMpyToDPsim(CIM_network, domain, gen_model="3Order"):
                 nv2 = float(str(res[i].PowerTransformerEnd[1].ratedU))
                 r = float(str(res[i].PowerTransformerEnd[0].r))
                 i = float(str(res[i].PowerTransformerEnd[0].x))
-                transformer.set_parameters(nom_voltage_end_1 = nv1, nom_voltage_end_2 = nv2,ratio_abs = 0, ratio_phase = 0, resistance = r, inductance = i)
+                transformer.set_parameters(nom_voltage_end_1 = nv1, nom_voltage_end_2 = nv2,ratio_abs = nv1/nv2, ratio_phase = 0, resistance = r, inductance = i)
 
             Components_Dict[transformer.uid] = {"Element": transformer, "Nodes": []}
 
