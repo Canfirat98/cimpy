@@ -1,13 +1,10 @@
 import sys
-sys.path.insert(0,'/home/mmo-cya/dpsim/build')
+sys.path.insert(0,'/home/mmo/git/Can/dpsim/build')
 import dpsimpy
 import cimpy
 from enum import Enum
 import numpy
 import cmath
-
-
-
 
 # define dpsimpy domains
 class Domain(Enum):
@@ -16,10 +13,43 @@ class Domain(Enum):
     DP = 3
     EMT = 4
 
-frequency = 60
+class Multiplier(Enum):
+    p = 1
+    n = 2
+    micro = 3
+    m = 4
+    c = 5
+    d = 6
+    k = 7
+    M = 8
+    G = 9
+    T = 10
+    
+def unitValue(value, multiplier=Multiplier.k):
+    if (multiplier==Multiplier.p):
+        return value * 1e-12
+    elif (multiplier==Multiplier.n):
+        return value * 1e-9
+    elif (multiplier==Multiplier.micro):
+        return value * 1e-6
+    elif (multiplier==Multiplier.m):
+        return value * 1e-3
+    elif (multiplier==Multiplier.c):
+        return value * 1e-2
+    elif (multiplier==Multiplier.d):
+        return value * 1e-1
+    elif (multiplier==Multiplier.k):
+        return value * 1e3
+    elif (multiplier==Multiplier.M):
+        return value * 1e6
+    elif (multiplier==Multiplier.G):
+        return value * 1e9
+    elif (multiplier==Multiplier.T):
+        return value * 1e12
+
 
 # Domains hinzufügen
-def CIMpyToDPsim(CIM_network, domain, gen_model="3Order"):
+def CIMpyToDPsim(CIM_network, domain, frequency = 60, gen_model="3Order"):
 
     # Nodes
     Nodes = dict()
