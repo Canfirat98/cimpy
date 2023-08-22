@@ -8,7 +8,7 @@ import cmath
 import logging
 
 # configure logging
-logging.basicConfig(filename='CimToDpsim.log', encoding='utf-8', level=logging.DEBUG)
+logging.basicConfig(filename='CIM2Dpsim.log', encoding='utf-8', level=logging.DEBUG)
 
 # define dpsimpy domains
 class Domain(Enum):
@@ -53,7 +53,7 @@ def unitValue(value, multiplier=Multiplier.k):
 
 
 # Domains hinzufügen
-def CIMpyToDPsim(CIM_network, domain, frequency = 60, log_level=dpsimpy.LogLevel.info, gen_model="3Order"):
+def CIM2DPsim(CIM_network, domain, frequency = 60, log_level=dpsimpy.LogLevel.info, gen_model="3Order"):
 
     # Nodes
     nodes = dict()
