@@ -22,7 +22,8 @@ class Domain(Enum):
 class SGModels(Enum):
     VBR_3Order = 1
     VBR_4Order = 2
-    VBR_6Order = 3
+    VBR_5Order = 3
+    VBR_6Order = 4
     
 class Multiplier(Enum):
     p = 1
