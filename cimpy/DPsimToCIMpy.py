@@ -118,10 +118,10 @@ def DPsimToCIMpy ( DPsim_system , DPsim_simulation):
         elif "Transformer" in str(type(comp)):
             # Transfomer Parameters
             name = comp.uid
-            r = float(str(comp.attr("R")))                               # Widerstand
-            x = float(str(comp.attr("L")))                               # Induktivität
-            mNominalVoltageEnd1 = float(str(comp.attr("nominal_voltage_end1")))      # Spannung Hochspannungsseite   
-            mNominalVoltageEnd2 = float(str(comp.attr("nominal_voltage_end2")))      # Spannung Niederspannungsseite   
+            r = float(str(comp.attr("R")))                                              # Widerstand
+            x = float(str(comp.attr("L")))                                              # Induktivität
+            mNominalVoltageEnd1 = float(str(comp.attr("nominal_voltage_end1")))         # Spannung Hochspannungsseite   
+            mNominalVoltageEnd2 = float(str(comp.attr("nominal_voltage_end2")))         # Spannung Niederspannungsseite   
 
             #determine the connected Node
             Node_List = nodes_of_comp(DPsim_system, name)
