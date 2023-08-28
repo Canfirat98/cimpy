@@ -22,7 +22,8 @@ class Domain(Enum):
 class SGModels(Enum):
     VBR_3Order = 1
     VBR_4Order = 2
-    VBR_6Order = 3
+    VBR_5Order = 3
+    VBR_6Order = 4
     
 class Multiplier(Enum):
     p = 1
@@ -312,12 +313,12 @@ def CIM2DPsim(CIM_network, domain, frequency = 60, log_level=dpsimpy.LogLevel.in
                 load.modify_power_flow_bus_type(dpsimpy.PowerflowBusType.PQ)
             elif (domain == Domain.SP):
                 load = dpsimpy_components.Load(res[i].mRID, res[i].name, log_level)
-                load.set_parameters(p, q, nom_voltage)
-                #load.set_parameters(p, q)
+                #load.set_parameters(p, q, nom_voltage)
+                load.set_power(p, q)
             else:
                 load = dpsimpy_components.RXLoad(res[i].mRID, res[i].name, log_level)
-                load.set_parameters(p, q, nom_voltage)
-                #load.set_parameters(p, q)
+                #load.set_parameters(p, q, nom_voltage)
+                load.set_power(p, q)
 
             components_dict[res[i].mRID] = {"Element": load, "Nodes": []}
             logging.debug('Created EnergyConsumer: name={}, p={}[W], q={}[VAR], nom_voltage={}[V]'.format(
@@ -335,13 +336,13 @@ def CIM2DPsim(CIM_network, domain, frequency = 60, log_level=dpsimpy.LogLevel.in
             
             # get values of end1
             rated_voltage_end1 = unitValue(end1.ratedU, Multiplier.k)
-            rated_power_end1 = unitValue(end1.ratedS, Multiplier.k)
+            rated_power_end1 = unitValue(end1.ratedS, Multiplier.M)
             r_end1 = end1.r
             x_end1 = end1.x
             
             # get values of end2
             rated_voltage_end2 = unitValue(end2.ratedU, Multiplier.k) 
-            rated_power_end2 = unitValue(end2.ratedS, Multiplier.k)
+            rated_power_end2 = unitValue(end2.ratedS, Multiplier.M)
             r_end2 = end2.r
             x_end2 = end2.x
             
@@ -352,6 +353,7 @@ def CIM2DPsim(CIM_network, domain, frequency = 60, log_level=dpsimpy.LogLevel.in
             
             # TODO: consider tap changer!!
             # TODO: consider phase of transformers
+            ratio=0
             if (rated_voltage_end1>=rated_voltage_end2):
                 # high voltage side is end1
                 ratio=rated_voltage_end1/rated_voltage_end2
@@ -363,9 +365,10 @@ def CIM2DPsim(CIM_network, domain, frequency = 60, log_level=dpsimpy.LogLevel.in
                     # transformer impedance is refered to end1 --> end1
                     inductance=(x_end2/omega)*(ratio**2)
                     resistance=r_end2*(ratio**2)
-                transformer.set_base_voltage(rated_voltage_end1)
                 transformer.set_parameters(nom_voltage_end_1=rated_voltage_end1, nom_voltage_end_2=rated_voltage_end2, 
                                            ratio_abs=ratio, ratio_phase=0, resistance=resistance, inductance=inductance)
+                if (domain==Domain.PF): 
+                    transformer.set_base_voltage(rated_voltage_end1)
                 logging.debug('Created PowerTransformer: name={}, nom_voltage_end_1={}, nom_voltage_end_2={}, ratio_abs={}, ratio_phase={}, resistance={}, inductance={}'.format(
                                 res[i].name, rated_voltage_end1, rated_voltage_end2, ratio, 0, resistance, inductance))
             elif (rated_voltage_end2>=rated_voltage_end1): 
@@ -382,10 +385,12 @@ def CIM2DPsim(CIM_network, domain, frequency = 60, log_level=dpsimpy.LogLevel.in
                 transformer.set_base_voltage(rated_voltage_end2)
                 transformer.set_parameters(nom_voltage_end_1=rated_voltage_end2, nom_voltage_end_2=rated_voltage_end1, 
                                            ratio_abs=ratio, ratio_phase=0, resistance=resistance, inductance=inductance)
+                if (domain==Domain.PF): 
+                    transformer.set_base_voltage(rated_voltage_end1)
                 logging.debug('Created PowerTransformer: name={}, nom_voltage_end_1={}, nom_voltage_end_2={}, ratio_abs={}, ratio_phase={}, resistance={}, inductance={}'.format(
                                 res[i].name, rated_voltage_end2, rated_voltage_end1, ratio, 0, resistance, inductance))
             
-            components_dict[res[i].mRID] = {"Element": transformer, "Nodes": []}
+            components_dict[res[i].mRID] = {"Element": transformer, "Nodes": [None, None]}
             
 
     ### Nodes
@@ -416,10 +421,33 @@ def CIM2DPsim(CIM_network, domain, frequency = 60, log_level=dpsimpy.LogLevel.in
                         if terminal.ConductingEquipment.mRID == SynchronousMachineTCR_Dict[syn_machine_tcr_mRID].mRID:
                             component_mRID = syn_machine_tcr_mRID
                             break
-                if component_mRID in components_dict:
                     components_dict[component_mRID]["Nodes"].append(node)
+                    
+                elif isinstance(terminal.ConductingEquipment, cimpy.cgmes_v2_4_15.PowerTransformer):
+                    trafo = terminal.ConductingEquipment
+                    end1=trafo.PowerTransformerEnd[0] if trafo.PowerTransformerEnd[0].endNumber==1 else trafo.PowerTransformerEnd[1]
+                    end2=trafo.PowerTransformerEnd[1] if trafo.PowerTransformerEnd[1].endNumber==2 else trafo.PowerTransformerEnd[0]
+                    # get voltages
+                    rated_voltage_end1 = end1.ratedU, Multiplier.k
+                    rated_voltage_end2 = end2.ratedU, Multiplier.k
+                                                
+                    if (rated_voltage_end1>=rated_voltage_end2):
+                        # HV side is the first node, LV side is the second node
+                        if (end1.Terminal.TopologicalNode.mRID==res[j].mRID):
+                            components_dict[component_mRID]["Nodes"][0]=node
+                        elif (end2.Terminal.TopologicalNode.mRID==res[j].mRID):
+                            components_dict[component_mRID]["Nodes"][1]=node
+                    else:
+                        # LV side is the first node, HV side is the second node
+                        if (end1.Terminal.TopologicalNode.mRID==res[j].mRID):
+                            components_dict[component_mRID]["Nodes"][1]=node
+                        elif (end2.Terminal.TopologicalNode.mRID==res[j].mRID):
+                            components_dict[component_mRID]["Nodes"][0]=node
+                else:
+                    if (component_mRID in components_dict):
+                        components_dict[component_mRID]["Nodes"].append(node)
                    
-    
+                   
     # Connect the components with nodes (dpsimpy components)
     component_list = []                                             
     for comp_ID in components_dict:
@@ -482,7 +510,8 @@ def get_powerflow_results(CIM_network):
                     for pf_elem in SvPowerFlow_list:
                         if pf_elem.Terminal.mRID==terminal.mRID:
                             p = p - pf_elem.p
-                            q = q - pf_elem.p
+                            q = q - pf_elem.q
+                            
             pf_results.loc[len(pf_results)] = {'Bus': node.name, 'Vmag [kV]':v_mag, 'Vangle [rad]':v_angle, 'P [MW]':p, 'Q [MVAr]':q}       
 
     return pf_results
