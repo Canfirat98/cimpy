@@ -5,8 +5,7 @@ import cimpy
 import numpy as np
 import cmath
 from math import sqrt, pi
-from cimpy import utils
-
+import cimpy.CIMScenarios as utils
 
 
 frequency = 60
