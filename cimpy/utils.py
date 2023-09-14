@@ -144,82 +144,133 @@ def add_external_network_injection(import_result, version, mRID, voltage_set_poi
     return import_result
 
 
-def add_ACLineSegment(import_result, version, mRID_1, mRID_2, r, x, bch, gch, BaseVoltage, name = 'ACLineSegment'):
-    res = import_result['topology']
+def add_ACLineSegment(cim_topologie, version, name, mRID="", mRID_node1="", node1_name="", mRID_node2="", node2_name="", r=0, x=0, bch=0, gch=0, baseVoltage=0):
+    """
+    Function to add ACLineSegment objects to existing cim topology
+
+    ...
+
+    Parameters
+    ----------
+    cim_topologie : dict
+        existing cim topology
+    version : str
+        cgmes version. Actually only version 2.4.15 is supported
+    name : str
+        name of the ACLineSegment to be added
+    mRID : str
+        uuid for the synchronous machine. If mRID=="", it will be automatically generate
+    mRID_node1 : str
+        uuid of the first node to which this ACLineSegment has to be connected
+    mRID_node2 : str
+        uuid of the second node to which this ACLineSegment machine has to be connecteds
+    r : float
+        Positive sequence series resistance of the entire line section. Unit: Ohm
+    x : float
+        Positive sequence series reactance of the entire line section. Unit: Ohm
+    bch : float
+        Positive sequence shunt (charging) susceptance, uniformly distributed, of the entire line section. This value represents the full charging over the full length of the line. Unit: S
+    gch : float
+        Positive sequence shunt (charging) conductance, uniformly distributed, of the entire line section. Unit: S
+    baseVoltage: float
+        Nominal Voltage of this line
+        
+    Returns
+    ------- 
+    import_result
+    dict containing the modified cim topology
+    """
+    
+    res = cim_topologie['topology']
     
     if name in res:
-        print(name, "is already included, ... create ACLineSegment with new mRID")
-        name = name + str(list(res.keys()).count("ACLineSegment") + 1)
+        print('WARN: ACLineSegment mRID="{}" is already included in the cim topology, object will be not be addd to cim topology"', mRID)
+        return cim_topologie
+
+    # Creating random mRID using uuid4()
+    if mRID == "":
+        mRID = str(uuid.uuid4())
+        
+    if (node1_name!="" and mRID_node1==""):
+        for uuid_, obj in res.items():
+            if (obj.name==node1_name):
+                mRID_node1=uuid_
+    if (node2_name!="" and mRID_node2==""):
+        for uuid_, obj in res.items():
+            if (obj.name==node2_name):
+                mRID_node2=uuid_
     
+    # look for topological nodels connected to line            
+    TopologicalNode1 = None
+    TopologicalNode2 = None
+    if mRID_node1 in res:
+        if 'TopologicalNode' in str(type(res[mRID_node1])):
+            TopologicalNode1 = res[mRID_node1]
+        elif 'ConnectivityNode' in str(type(res[mRID_node1])):
+            TopologicalNode1 = res[mRID_node1].TopologicalNode
 
-    TopologicalNode1 = ''
-    TopologicalNode2 = ''
-    if mRID_1 in res:
-        if 'TopologicalNode' in str(type(res[mRID_1])):
-            TopologicalNode1 = res[mRID_1]
-        elif 'ConnectivityNode' in str(type(res[mRID_1])):
-            TopologicalNode1 = res[mRID_1].TopologicalNode.mRID
-
-    if mRID_2 in res:
-        if 'TopologicalNode' in str(type(res[mRID_2])):
-            TopologicalNode2 = res[mRID_2]
-        elif 'ConnectivityNode' in str(type(res[mRID_2])):
-            TopologicalNode2 = res[mRID_2].TopologicalNode.mRID
+    if mRID_node2 in res:
+        if 'TopologicalNode' in str(type(res[mRID_node2])):
+            TopologicalNode2 = res[mRID_node2]
+        elif 'ConnectivityNode' in str(type(res[mRID_node2])):
+            TopologicalNode2 = res[mRID_node2].TopologicalNode
     
-
-    if TopologicalNode1 != '' and TopologicalNode2 != '':
-        terminal_name1 = 'Terminal_1_' + name 
-        terminal_name2 = 'Terminal_2_' + name 
-
-        #module_name = "cimpy." + version + ".Equipment."
+    if (TopologicalNode1 is not None) and (TopologicalNode2 is not None):
+        
         module_name = "cimpy." + version + "."
 
+        # create terminals for this line
+        terminal1_mRID = str(uuid.uuid4())
         terminal_module = importlib.import_module((module_name + 'Terminal'))
         terminal_class = getattr(terminal_module, 'Terminal')
-        res[terminal_name1] = terminal_class(mRID=terminal_name1,
-                                            name=terminal_name1,
+        res[terminal1_mRID] = terminal_class(mRID=terminal1_mRID,
+                                            name='Terminal_1_' + name,
+                                            sequenceNumber=1,
                                             TopologicalNode=TopologicalNode1)
-        
-        res[terminal_name2] = terminal_class(mRID=terminal_name2,
-                                            name=terminal_name2,
+        terminal2_mRID = str(uuid.uuid4())
+        res[terminal2_mRID] = terminal_class(mRID=terminal2_mRID,
+                                            name='Terminal_2_' + name,
+                                            sequenceNumber=2,
                                             TopologicalNode=TopologicalNode2)
 
+        # create object of  type ACLineSegment
         ACLineSegment_module = importlib.import_module((module_name + 'ACLineSegment'))
         ACLineSegment_class = getattr(ACLineSegment_module, 'ACLineSegment')
-        res[name] = ACLineSegment_class(mRID= name,
+        res[mRID] = ACLineSegment_class(mRID= mRID,
                                         name= name,
                                         r = r,
                                         x = x,
                                         bch = bch,
                                         gch = gch,
-                                        BaseVoltage = BaseVoltage,
-                                        Terminals = [res[terminal_name1], res[terminal_name2]])
+                                        BaseVoltage = create_BaseVoltage(res, baseVoltage),
+                                        Terminals = [res[terminal1_mRID], res[terminal2_mRID]])
         # Connect Equipment to Terminal
-        res[terminal_name1].ConductingEquipment = res[name]
-        res[terminal_name2].ConductingEquipment = res[name]
+        res[terminal1_mRID].ConductingEquipment = res[mRID]
+        res[terminal2_mRID].ConductingEquipment = res[mRID]
 
         # Append the Terminal List of the TopologicalNodes
-        res[mRID_1].Terminal.append(res[terminal_name1])
-        res[mRID_2].Terminal.append(res[terminal_name2])
+        res[mRID_node1].Terminal.append(res[terminal1_mRID])
+        res[mRID_node2].Terminal.append(res[terminal2_mRID])
 
-    if TopologicalNode1 == '':
-        print('No Terminal with first mRID ', mRID_1, ' found in object list!')
-        return 0
+        cim_topologie['topology'] = res
+        return cim_topologie
 
-    if TopologicalNode2 == '':
-        print('No Terminal with second mRID ', mRID_2, ' found in object list!')
-        return 0
+    elif TopologicalNode1 is None:
+        print('WARN: No Topological with mRID "{}" found in cim topology, ACLineSegment name="{}" will be not added to cim topology!', mRID_node1, name)
+        
+    if TopologicalNode2 is None:
+        print('WARN: No Topological with mRID "{}" found in cim topology, ACLineSegment name="{}" will be not added to cim topology!', mRID_node2, name)
 
-    import_result['topology'] = res
+    cim_topologie['topology'] = res
 
-    return import_result
+    return cim_topologie
 
 
-def add_Terminal(import_result, version, TopologicalNode, ConductingEquipment, pInjection = 0, qInjection = 0, mRID = ''):
-    res = import_result['topology']
+def add_Terminal(cim_topologie, version, TopologicalNode, ConductingEquipment, pInjection = 0, qInjection = 0, mRID = ''):
+    res = cim_topologie['topology']
     
     if mRID == "":
-        mRID = uuid.uuid1()
+        mRID = str(uuid.uuid4())
 
     #module_name = "cimpy." + version + ".Equipment."
     module_name = "cimpy." + version + "."
@@ -233,302 +284,532 @@ def add_Terminal(import_result, version, TopologicalNode, ConductingEquipment, p
                                 pInjection= pInjection,
                                 qInjection= qInjection)
 
+    cim_topologie['topology'] = res
 
-    import_result['topology'] = res
-
-    return import_result
+    return cim_topologie
         
-def add_TopologicalNode(import_result, version, BaseVoltage, v, angle, mRID = ""):
-    res = import_result['topology']
+def add_TopologicalNode(cim_topologie, version, name, mRID="", baseVoltage=0, v=0.0, angle=0.0):		
+  
+    res = cim_topologie['topology']
+    
     if mRID in res:
         print("mRID", mRID, "is already included")
-        return import_result
+        return cim_topologie
 
-    # Creating random mRID using uuid1()
+    # Creating random mRID using uuid4()
     if mRID == "":
-        mRID = uuid.uuid1()
+        mRID = str(uuid.uuid4())
 
-    #module_name = "cimpy." + version + ".Equipment."
+    # get module name
     module_name = "cimpy." + version + "."
-
     TopologicalNode_module = importlib.import_module((module_name + 'TopologicalNode'))
+    
+    # create topological node object
     TopologicalNode_class = getattr(TopologicalNode_module, 'TopologicalNode')
     res[mRID] = TopologicalNode_class(mRID= mRID,
-                                name= mRID,
-                                BaseVoltage= BaseVoltage,
+                                name= name,
+                                BaseVoltage=baseVoltage,
                                 Terminal = [])
     
-    SvVoltage_name = mRID + "-sv"
+    # create SV object
+    if isinstance(v, float) and isinstance(angle, float):
+        SvVoltage_name = name + "-sv"
+        SvVoltage_module = importlib.import_module((module_name + 'SvVoltage'))
+        SvVoltage_class = getattr(SvVoltage_module, 'SvVoltage')
+        res[SvVoltage_name] = SvVoltage_class(v=v,
+                                            angle=angle,
+                                            TopologicalNode=res[mRID])
+        res[mRID].SvVoltage = res[SvVoltage_name]
     
-    SvVoltage_module = importlib.import_module((module_name + 'SvVoltage'))
-    SvVoltage_class = getattr(SvVoltage_module, 'SvVoltage')
-    res[SvVoltage_name] = SvVoltage_class(v=v,
-                                        angle=angle,
-                                        TopologicalNode=res[mRID])
-
-    res[mRID].SvVoltage = res[SvVoltage_name]
-    import_result['topology'] = res
-
-    return import_result
+    cim_topologie['topology'] = res
+    return cim_topologie
 
     
-def add_SynchronousMachine(import_result, version, mRID, p, q, ratedS, ratedU, targetValue, initialP, name = 'SynchronousMachine'):          
-# RotatingMachine without paramameters? 
-    res = import_result['topology']
-    TopologicalNode = ''
-    
-    if name in res:
-        print(name, "is already included, ... create SynchronousMachine with new mRID")
-        name = name + str(list(res.keys()).count("SynchronousMachine") + 1)
-    
+def add_SynchronousMachine(cim_topologie, version, name, mRID_node="", node_name="", mRID="", ratedS=0, ratedU=0, p=0, q=0, targetValue=0, initialP=0):          
+    """
+    #TODO: baseVoltage?
+    Function to add synchronous machine to existing cim topology
 
+    ...
+
+    Parameters
+    ----------
+    cim_topologie : dict
+        existing cim topology
+    version : str
+        cgmes version. Actually only version 2.4.15 is supported
+    name : str
+        name of the synchronous machine to be added
+    mRID_node : str
+        uuid of the node to which this synchronous machine has to be connected
+    mRID : str
+        uuid for the synchronous machine. If mRID=="", it will be automatically generated
+    ratedS : float
+        apparent power rating for the unit. The attribute shall have a positive value. Unit: MVA
+    ratedU : float
+        Rated voltage. It is primarily used for short circuit data exchange according to IEC 60909. Unit: kV
+    p : float
+        Active power injection. Load sign convention is used, i.e. positive sign means flow out from a node. Starting value for a steady state solution. Unit: MW
+    q : float
+        Reactive power injection. Load sign convention is used, i.e. positive sign means flow out from a node. Starting value for a steady state solution. Unit: MVAr
+    targetValue : float
+        uuid for the synchronous machine. If mRID=="", it will be automatically generated. Unit: kV
+    initialP : float
+        Default initial active power which is used to store a powerflow result for the initial active power for this unit in this network configuration. Unit: MW
+
+        
+    Returns
+    ------- 
+    import_result
+    dict containing the modified cim topology
+    """
+        
+    # TODO: RotatingMachine without paramameters?
+    
+    res = cim_topologie['topology']
+
+    if mRID in res:
+        print('WARN: Synchronous Machine mRID="{}" is already included in the cim topology, object will be not be addd to cim topology"', mRID)
+        return cim_topologie
+    
+    # Creating random mRID using uuid4()
+    if mRID == "":
+        mRID = str(uuid.uuid4())
+                
+    if (node_name!="" and mRID_node==""):
+        for uuid_, obj in res.items():
+            if isinstance(obj, cimpy.cgmes_v2_4_15.TopologicalNode):
+                if (obj.name==node_name):
+                    mRID_node=uuid_
+                    
+    TopologicalNode = None
     if mRID in res:
         if 'TopologicalNode' in str(type(res[mRID])):
             TopologicalNode = res[mRID]
         elif 'ConnectivityNode' in str(type(res[mRID])):
             TopologicalNode = res[mRID].TopologicalNode.mRID
 
-    if TopologicalNode != '':
-        terminal_name = 'Terminal_' + name 
-        GeneratingUnit_name = 'GeneratingUnit_' + name
-        RegulatingControl_name = 'RegulatingControl' + name
-
-        #module_name = "cimpy." + version + ".Equipment."
+    if TopologicalNode is not None:
+        
         module_name = "cimpy." + version + "."
         
+        # add terminal for this SM
+        terminal_mRID = str(uuid.uuid4())
         terminal_module = importlib.import_module((module_name + 'Terminal'))
         terminal_class = getattr(terminal_module, 'Terminal')
-        res[terminal_name] = terminal_class(mRID=terminal_name,
-                                            name=terminal_name,
+        res[terminal_mRID] = terminal_class(mRID=terminal_mRID,
+                                            name='Terminal_' + name,
                                             TopologicalNode=TopologicalNode)
         
-        RegulatingControl_module = importlib.import_module((module_name + 'RegulatingControl'))
-        RegulatingControl_class = getattr(RegulatingControl_module, 'RegulatingControl')
-        res[RegulatingControl_name] = RegulatingControl_class(mRID=RegulatingControl_name,
-                                            name=RegulatingControl_name,
-                                            targetValue=targetValue)
-        
+        # add terminal for this SM
+        generating_unit_mRID = str(uuid.uuid4())
         GeneratingUnit_module = importlib.import_module((module_name + 'GeneratingUnit'))
         GeneratingUnit_class = getattr(GeneratingUnit_module, 'GeneratingUnit')
-        res[GeneratingUnit_name] = GeneratingUnit_class(mRID=GeneratingUnit_name,
-                                            name=GeneratingUnit_name,
-                                            initialP  = initialP)
-
+        res[generating_unit_mRID] = GeneratingUnit_class(mRID=generating_unit_mRID,
+                                                        name='GeneratingUnit_' + name,
+                                                        initialP=initialP)
+        
+        # add terminal for this SM
+        regulating_control_mRID = str(uuid.uuid4())
+        RegulatingControl_module = importlib.import_module((module_name + 'RegulatingControl'))
+        RegulatingControl_class = getattr(RegulatingControl_module, 'RegulatingControl')
+        res[regulating_control_mRID] = RegulatingControl_class(mRID=regulating_control_mRID,
+                                                              name='RegulatingControl_' + name,
+                                                              targetValue=targetValue,
+                                                              mode='http://iec.ch/TC57/2013/CIM-schema-cim16#RegulatingControlModeKind.voltage#')
+        # ADD targetValueUnitMultiplier --> fix class in cimpy
+        
+        # create Synchronous machine object
         SynchronousMachine_module = importlib.import_module((module_name + 'SynchronousMachine'))
         SynchronousMachine_class = getattr(SynchronousMachine_module, 'SynchronousMachine')
-        res[name] = SynchronousMachine_class(mRID= name,
-                                        name= name,
-                                        p= p,
-                                        q= q,
-                                        ratedS= ratedS,
-                                        ratedU= ratedU,
-                                        RegulatingControl= res[RegulatingControl_name],
-                                        GeneratingUnit= res[GeneratingUnit_name],
-                                        Terminals= [res[terminal_name]])
+        res[name] = SynchronousMachine_class(mRID=mRID,
+                                            name=name,
+                                            p=p,
+                                            q=q,
+                                            ratedS=ratedS,
+                                            ratedU=ratedU,
+                                            RegulatingControl=res[regulating_control_mRID],
+                                            GeneratingUnit=res[regulating_control_mRID],
+                                            Terminals=[res[terminal_mRID]])
         
-        res[terminal_name].ConductingEquipment = res[name]
-
-        # Append the Terminal List of the TopologicalNode
-        res[mRID].Terminal.append(res[terminal_name])
+        # connect terminal with synchronous machine
+        res[terminal_mRID].ConductingEquipment = res[mRID]
+       
+        # Append the Terminal to the terminals list of the TopologicalNode
+        res[mRID_node].Terminal.append(res[terminal_mRID])
+        
+        cim_topologie['topology'] = res
+        return cim_topologie
 
     else:
-        print('No Terminal with mRID ', mRID, ' found in object list!')
-        return 0
+        print('WARN: No Topological with mRID "{}" found in cim topology, Synchronous Machine name="{}" will be not added to cim topology!', mRID_node, name)
+        return cim_topologie
 
-    import_result['topology'] = res
+def extend_SynchronousMachineTimeConstantReactance(cim_topologie, version, name="", mRID="", SynchronousMachine_mRID="", 
+                                                   damping=0, inertia=0, statorResistance=0, statorLeakageReactance=0, 
+                                                   tpdo=0, tpqo=0, tppdo=0, tppqo=0, xDirectSubtrans=0, xDirectSync=0, 
+                                                   xDirectTrans=0, xQuadSubtrans=0, xQuadSync=0, xQuadTrans=0):
+    """
+    Function to add element of type SynchronousMachineTimeConstantReactance to existing cim topology
 
-    return import_result
+    ...
 
+    Parameters
+    ----------
+    cim_topologie : dict
+        existing cim topology
+    version : str
+        cgmes version. Actually only version 2.4.15 is supported
+    name : str
+        name of the synchronous machine to be added
+    mRID : str
+        uuid for the synchronous machine. If mRID=="", it will be automatically generated
+    SynchronousMachine_mRID : str
+        uuid of the synchronous machine to which this object belongs
 
-def extend_SynchronousMachineTimeConstantReactance(import_result, version, SynchronousMachineID, damping, inertia, statorResistance, statorLeakageReactance, tpdo, tpqo, tppdo, tppqo, xDirectSubtrans, xDirectSync, xDirectTrans, xQuadSubtrans, xQuadSync, xQuadTrans):
-    res = import_result['topology']
-    name = SynchronousMachineID.mRID + "_TimeConstantReactance"
+    Returns
+    ------- 
+    import_result
+    dict containing the modified cim topology
+    """
     
-    #module_name = "cimpy." + version + ".Equipment."
+    res = cim_topologie['topology']
+    
+    if mRID in res:
+        print('WARN: SynchronousMachineTimeConstantReactance mRID="{}" is already included in the cim topology, object will be not be addd to cim topology"', mRID)
+        return cim_topologie
+    
+    # search for the synchonous machine
+    synchronous_machine = None
+    if SynchronousMachine_mRID in res.keys():
+        synchronous_machine = res[SynchronousMachine_mRID]
+    else:
+        print('WARN: SynchronousMachine mRID="{}" coud not be found in the cim topology, object of type SynchronousMachineTimeConstantReactance will be not addd to cim topology"', SynchronousMachine_mRID)
+        return cim_topologie
+    
+    if name == "":
+        name = synchronous_machine.name + "_TimeConstantReactance"
+    
+    if mRID == "":
+        mRID = str(uuid.uuid4())
+        
     module_name = "cimpy." + version + "."
 
-    
+    # create object of type SynchronousMachineTimeConstantReactance
     SynchronousMachineTCR_module = importlib.import_module((module_name + 'SynchronousMachineTimeConstantReactance'))
     SynchronousMachineTCR_class = getattr(SynchronousMachineTCR_module, 'SynchronousMachineTimeConstantReactance')
-    res[name] = SynchronousMachineTCR_class(mRID= name,
-                                    name= name,
-                                    SynchronousMachine = SynchronousMachineID,
-                                    damping= damping,
-                                    inertia= inertia,
-                                    statorResistance= statorResistance,
-                                    statorLeakageReactance= statorLeakageReactance,
-                                    tpdo= tpdo,
-                                    tpqo= tpqo,
-                                    tppdo= tppdo,
-                                    tppqo= tppqo,
-                                    xDirectSubtrans= xDirectSubtrans,
-                                    xDirectSync= xDirectSync,
-                                    xDirectTrans= xDirectTrans,
-                                    xQuadSubtrans= xQuadSubtrans,
-                                    xQuadSync= xQuadSync,
-                                    xQuadTrans= xQuadTrans)
-    import_result['topology'] = res
+    res[name] = SynchronousMachineTCR_class(mRID=mRID,
+                                    name=name,
+                                    SynchronousMachine=synchronous_machine,
+                                    damping=damping,
+                                    inertia=inertia,
+                                    statorResistance=statorResistance,
+                                    statorLeakageReactance=statorLeakageReactance,
+                                    tpdo=tpdo,
+                                    tpqo=tpqo,
+                                    tppdo=tppdo,
+                                    tppqo=tppqo,
+                                    xDirectSubtrans=xDirectSubtrans,
+                                    xDirectSync=xDirectSync,
+                                    xDirectTrans=xDirectTrans,
+                                    xQuadSubtrans=xQuadSubtrans,
+                                    xQuadSync=xQuadSync,
+                                    xQuadTrans=xQuadTrans)
+    # TODO: Add <cim:SynchronousMachineTimeConstantReactance.modelType rdf:resource="http://iec.ch/TC57/2013/CIM-schema-cim16#SynchronousMachineModelKind.subtransient" />
+    # TODO: Add <cim:SynchronousMachineTimeConstantReactance.rotorType rdf:resource="http://iec.ch/TC57/2013/CIM-schema-cim16#RotorKind.salientPole" 
+    
+    cim_topologie['topology'] = res
 
-    return import_result
+    return cim_topologie
 
 
-def add_EnergyConsumer(import_result, version, mRID, p, q, BaseVoltage, name = "EnergyConsumer"):
-    res = import_result['topology']
+def add_EnergyConsumer(cim_topologie, version, name, mRID="", mRID_node="", node_name="", p_nom=0, q_nom=0, 
+                        p_init=0, q_init=0, baseVoltage=""):
+    """
+    Function to add element of type SynchronousMachineTimeConstantReactance to existing cim topology
+
+    ...
+
+    Parameters
+    ----------
+    cim_topologie : dict
+        existing cim topology
+    version : str
+        cgmes version. Actually only version 2.4.15 is supported
+    name : str
+        name of the synchronous machine to be added
+    mRID_node : str
+        uuid of the node to which this synchronous machine has to be connected
+    mRID : str
+        uuid for the synchronous machine. If mRID=="", it will be automatically generated
+    SynchronousMachine_mRID : str
+        uuid of the synchronous machine to which this object belongs
+    p_nom: float 
+        Active power of the load. Load sign convention is used, i.e. positive sign means flow out from a node. For voltage dependent loads the value is at rated voltage. Starting value for a steady state solution. Unit: MW
+    q_nom: float 
+        Reactive power of the load. Load sign convention is used, i.e. positive sign means flow out from a node. For voltage dependent loads the value is at rated voltage. Starting value for a steady state solution. Unit: MVA
+    p_init : float
+        Active power injection. Load sign convention is used, i.e. positive sign means flow out from a node. Starting value for a steady state solution. Unit: MW
+    q_init : float
+        Reactive power injection. Load sign convention is used, i.e. positive sign means flow out from a node. Starting value for a steady state solution. Unit: MVAr
+    baseVoltage: float 
+        Unit: kV
+    Returns
+    ------- 
+    import_result
+    dict containing the modified cim topology
+    """
+    
+    res = cim_topologie['topology']
     TopologicalNode = ''
     
-    if name in res:
-        print(name, "is already included, ... create EnergyConsumer with new mRID")
-        name = name + str(list(res.keys()).count("EnergyConsumer") + 1)
-
     if mRID in res:
-        if 'TopologicalNode' in str(type(res[mRID])):
-            TopologicalNode = res[mRID]
-        elif 'ConnectivityNode' in str(type(res[mRID])):
-            TopologicalNode = res[mRID].TopologicalNode.mRID
+        print('WARN: EnergyConsumer mRID="{}" is already included in the cim topology, object will be not be addd to cim topology"', mRID)
+        return cim_topologie
+    
+    if mRID == "":
+        mRID = str(uuid.uuid4())
 
-    if TopologicalNode != '':
-        terminal_name = 'Terminal_' + name 
-        PowerFlow_name =  name + "-sv"
+    if (node_name!="" and mRID_node==""):
+        for uuid_, obj in res.items():
+            if isinstance(obj, cimpy.cgmes_v2_4_15.TopologicalNode):
+                if (obj.name==node_name):
+                    mRID_node=uuid_
+                
+    # search for the node mRID_node
+    TopologicalNode = None
+    if 'TopologicalNode' in str(type(res[mRID_node])):
+        TopologicalNode = res[mRID_node]
+    elif 'ConnectivityNode' in str(type(res[mRID_node])):
+        TopologicalNode = res[mRID_node].TopologicalNode
+                   
 
+    if TopologicalNode is not None:
         #module_name = "cimpy." + version + ".Equipment."
         module_name = "cimpy." + version + "."
         
+        # create terminal for this energyConsumer
+        terminal_mRID = str(uuid.uuid4())
         terminal_module = importlib.import_module((module_name + 'Terminal'))
         terminal_class = getattr(terminal_module, 'Terminal')
-        res[terminal_name] = terminal_class(mRID=terminal_name,
-                                            name=terminal_name,
+        res[terminal_mRID] = terminal_class(mRID='Terminal_' + name,
+                                            name=terminal_mRID,
                                             TopologicalNode=TopologicalNode)
 
+        # create terminal for this energyConsumer
         EnergyConsumer_module = importlib.import_module((module_name + 'EnergyConsumer'))
         EnergyConsumer_class = getattr(EnergyConsumer_module, 'EnergyConsumer')
-        res[name] = EnergyConsumer_class(mRID= name,
-                                        name= name,
-                                        p= p,
-                                        q= q,
-                                        BaseVoltage= BaseVoltage,
-                                        Terminals = [res[terminal_name]])
-         
+        res[mRID] = EnergyConsumer_class(mRID=mRID,
+                                        name=name,
+                                        p=p_nom,
+                                        q=q_nom,
+                                        BaseVoltage=create_BaseVoltage(res, baseVoltage),
+                                        Terminals=[res[terminal_mRID]])
+        
+        # create SvPowerFlow for this energyConsumer
         SvPowerFlow_module = importlib.import_module((module_name + 'SvPowerFlow'))
         SvPowerFlow_class = getattr(SvPowerFlow_module, 'SvPowerFlow')
-        res[PowerFlow_name] = SvPowerFlow_class(p= p,
-                                        q= q,
-                                        Terminal = res[terminal_name])
+        res[str(uuid.uuid4())] = SvPowerFlow_class(p=p_init,
+                                              q=q_init,
+                                              Terminal = res[terminal_mRID])
         
-        res[terminal_name].ConductingEquipment = res[name]
+        # set conductingEquipment of the terminal
+        res[terminal_mRID].ConductingEquipment = res[mRID]
 
-        # Append the Terminal List of the TopologicalNode
-        res[mRID].Terminal.append(res[terminal_name])
+        # Append the Terminal to the terminals list of the TopologicalNode
+        res[mRID_node].Terminal.append(res[terminal_mRID])
    
+        cim_topologie['topology'] = res
+        return cim_topologie    
     else:
-        print('No Terminal with mRID ', mRID, ' found in object list!')
-        return 0
-
-    import_result['topology'] = res
-
-    return import_result    
+        print('WARN: TopologicalNode mRID="{}" coud not be found in the cim topology, object of type EnergyConsumer will be not addd to cim topology"', mRID_node)
+        
+        return cim_topologie
 
 
-def add_PowerTransfomer(import_result, version, mRID_1, mRID_2, r, x, mNominalVoltageEnd1, mNominalVoltageEnd2, name = "PowerTransformer"):
-    res = import_result['topology']
+def add_PowerTransfomer(cim_topologie, version, name, mRID="", mRID_node1="", node1_name="", mRID_node2="", node2_name="", r=0, x=0, nominal_voltage_end1=0, nominal_voltage_end2=0):
+    """
+    Function to add PowerTransfomer objects to existing cim topology
+
+    ...
+
+    Parameters
+    ----------
+    cim_topologie : dict
+        existing cim topology
+    version : str
+        cgmes version. Actually only version 2.4.15 is supported
+    name : str
+        name of the PowerTransfomer to be added
+    mRID : str
+        uuid for the PowerTransfomer. If mRID=="", it will be automatically generate
+    mRID_node1 : str
+        uuid of the first node to which this PowerTransfomer has to be connected
+    mRID_node2 : str
+        uuid of the second node to which this PowerTransfomer machine has to be connecteds
+    r : float
+       Resistance (star-model) of the transformer end. The attribute shall be equal or greater than zero for non-equivalent transformers.
+       It has to be referred to the node mRID_node1. Unit: Ohm
+    x : float
+        Positive sequence series reactance (star-model) of the transformer end.
+        It has to be referred to the node mRID_node1. Unit: Ohm
+    bch : float
+        Positive sequence shunt (charging) susceptance, uniformly distributed, of the entire line section. This value represents the full charging over the full length of the line. Unit: S
+    gch : float
+        Positive sequence shunt (charging) conductance, uniformly distributed, of the entire line section. Unit: S
+    nominal_voltage_end1: float
+        Nominal Voltage of the node mRID_node1
+    nominal_voltage_end2: float
+        Nominal Voltage of this line
+        
+    Returns
+    ------- 
+    import_result
+    dict containing the modified cim topology
+    """
+    
+    res = cim_topologie['topology']
     
     if name in res:
-        print(name, "is already included, ... create PowerTransformer with new mRID")
-        name = name + str(list(res.keys()).count("PowerTransformer") + 1)
+        print('WARN: PowerTransformer mRID="{}" is already included in the cim topology, object will be not be addd to cim topology"', mRID)
+        return cim_topologie
 
-    TopologicalNode1 = ''
-    TopologicalNode2 = ''
-    if mRID_1 in res:
-        if 'TopologicalNode' in str(type(res[mRID_1])):
-            TopologicalNode1 = res[mRID_1]
-        elif 'ConnectivityNode' in str(type(res[mRID_1])):
-            TopologicalNode1 = res[mRID_1].TopologicalNode.mRID
-
-    if mRID_2 in res:
-        if 'TopologicalNode' in str(type(res[mRID_2])):
-            TopologicalNode2 = res[mRID_2]
-        elif 'ConnectivityNode' in str(type(res[mRID_2])):
-            TopologicalNode2 = res[mRID_2].TopologicalNode.mRID
+    # Creating random mRID using uuid4()
+    if mRID == "":
+        mRID = str(uuid.uuid4())
+        
+    if (node1_name!="" and mRID_node1==""):
+        for uuid_, obj in res.items():
+            if (obj.name==node1_name):
+                mRID_node1=uuid_
+    if (node2_name!="" and mRID_node2==""):
+        for uuid_, obj in res.items():
+            if (obj.name==node2_name):
+                mRID_node2=uuid_
     
+    # look for topological nodels connected to line            
+    TopologicalNode1 = None
+    TopologicalNode2 = None
+    if mRID_node1 in res:
+        if 'TopologicalNode' in str(type(res[mRID_node1])):
+            TopologicalNode1 = res[mRID_node1]
+        elif 'ConnectivityNode' in str(type(res[mRID_node1])):
+            TopologicalNode1 = res[mRID_node1].TopologicalNode
 
-    if TopologicalNode1 != '' and TopologicalNode2 != '':
-        terminal_name1 = 'Terminal_1_' + name 
-        terminal_name2 = 'Terminal_2_' + name 
-        HVSide_name = name + "-HVSide"
-        LVSide_name = name + "-LVSide"
-        
+    if mRID_node2 in res:
+        if 'TopologicalNode' in str(type(res[mRID_node2])):
+            TopologicalNode2 = res[mRID_node2]
+        elif 'ConnectivityNode' in str(type(res[mRID_node2])):
+            TopologicalNode2 = res[mRID_node2].TopologicalNode
+             
+    if (TopologicalNode1 is not None) and (TopologicalNode2 is not None):       
 
-        #module_name = "cimpy." + version + ".Equipment."
-        module_name = "cimpy." + version + "."
+        module_name = "cimpy." + version + "."        
         
+        # create terminals for this Trafo
+        terminal1_mRID = str(uuid.uuid4())
         terminal_module = importlib.import_module((module_name + 'Terminal'))
         terminal_class = getattr(terminal_module, 'Terminal')
-        res[terminal_name1] = terminal_class(mRID=terminal_name1,
-                                            name=terminal_name1,
+        res[terminal1_mRID] = terminal_class(mRID=terminal1_mRID,
+                                            name='Terminal_1_' + name,
+                                            sequenceNumber=1,
                                             TopologicalNode=TopologicalNode1)
-        
+        terminal2_mRID = str(uuid.uuid4())
         terminal_module = importlib.import_module((module_name + 'Terminal'))
-        terminal_class = getattr(terminal_module, 'Terminal')
-        res[terminal_name2] = terminal_class(mRID=terminal_name2,
-                                            name=terminal_name2,
+        res[terminal2_mRID] = terminal_class(mRID=terminal2_mRID,
+                                            name='Terminal_2_' + name,
+                                            sequenceNumber=2,
                                             TopologicalNode=TopologicalNode2)
         
+        # create PowerTransformer object
         PowerTransformer_module = importlib.import_module((module_name + 'PowerTransformer'))
         PowerTransformer_class = getattr(PowerTransformer_module, 'PowerTransformer')
-        res[name] = PowerTransformer_class(mRID=name,
-                                name=name,
-                                Terminals = [res[terminal_name1], res[terminal_name2]])
+        res[mRID] = PowerTransformer_class(mRID=mRID,
+                                           name=name,
+                                           Terminals = [res[terminal1_mRID], res[terminal2_mRID]])
         
-        HVSide_module = importlib.import_module((module_name + 'PowerTransformerEnd'))
-        HVSide_class = getattr(HVSide_module, 'PowerTransformerEnd')
-        res[HVSide_name] = HVSide_class(mRID=HVSide_name,
-                                        name=HVSide_name,
-                                        ratedU=mNominalVoltageEnd1,
-                                        r=r,
-                                        x=x,
-                                        endNumber=1,
-                                        Terminal=res[terminal_name1],
-                                        PowerTransformer=res[name] )
+        # create PowerTransformerEnd objects
+        End1_mRID = str(uuid.uuid4())
+        PowerTransformerEnd_module = importlib.import_module((module_name + 'PowerTransformerEnd'))
+        PowerTransformerEnd_class = getattr(PowerTransformerEnd_module, 'PowerTransformer')
+        res[End1_mRID] = PowerTransformerEnd_class(mRID=End1_mRID,
+                                                   name=name+"1",
+                                                   ratedU=nominal_voltage_end1,
+                                                   r=r,
+                                                   x=x,
+                                                   endNumber=1,
+                                                   Terminal=res[terminal1_mRID],
+                                                   PowerTransformer=res[name])
+        End2_mRID = str(uuid.uuid4())
+        res[End2_mRID] = PowerTransformerEnd_class(mRID=End2_mRID,
+                                                   name=name+"2",
+                                                   ratedU=nominal_voltage_end2,
+                                                   endNumber=2,
+                                                   Terminal=res[terminal2_mRID],
+                                                   PowerTransformer=res[name])
         
-        LVSide_module = importlib.import_module((module_name + 'PowerTransformerEnd'))
-        LVSide_class = getattr(LVSide_module, 'PowerTransformerEnd')
-        res[LVSide_name] = LVSide_class(mRID=LVSide_name,
-                                        name=LVSide_name,
-                                        ratedU=mNominalVoltageEnd2,
-                                        endNumber=2,
-                                        Terminal=res[terminal_name2],
-                                        PowerTransformer=res[name] )
-        
-        res[name].PowerTransformerEnd = [res[HVSide_name], res[LVSide_name]]
+        res[mRID].PowerTransformerEnd = [res[End1_mRID], res[End2_mRID]]
 
-        res[terminal_name1].ConductingEquipment = res[name]
-        res[terminal_name2].ConductingEquipment = res[name]
+        res[terminal1_mRID].ConductingEquipment = res[name]
+        res[terminal2_mRID].ConductingEquipment = res[name]
    
         # Append the Terminal List of the TopologicalNodes
-        res[mRID_1].Terminal.append(res[terminal_name1])
-        res[mRID_2].Terminal.append(res[terminal_name2])
-
-    if TopologicalNode1 == '':
-        print('No Terminal with first mRID ', mRID_1, ' found in object list!')
-        return 0
-
-    if TopologicalNode2 == '':
-        print('No Terminal with second mRID ', mRID_2, ' found in object list!')
-        return 0
-
-    import_result['topology'] = res
-
-    return import_result    
-
-def create_BaseVoltage(nominalVoltage):
+        res[mRID_node1].Terminal.append(res[terminal1_mRID])
+        res[mRID_node2].Terminal.append(res[terminal2_mRID])
         
-    #module_name = "cimpy." + version + ".Equipment."
-    module_name = "cimpy." + "cgmes_v2_4_15" + "."
+        cim_topologie['topology'] = res
 
+    elif TopologicalNode1 is None:
+        print('WARN: No Topological with mRID "{}" found in cim topology, PowerTransformer name="{}" will be not added to cim topology!', mRID_node1, name)
+        
+    if TopologicalNode2 is None:
+        print('WARN: No Topological with mRID "{}" found in cim topology, PowerTransformer name="{}" will be not added to cim topology!', mRID_node2, name)
+
+    return cim_topologie
+
+
+def create_BaseVoltage(cim_topologie, nominalVoltage):
+    """
+    Function to add element of type BaseVoltage to existing cim topology
+
+    ...
+
+    Parameters
+    ----------
+    cim_topologie : dict
+        existing cim topology
+    version : str
+        cgmes version. Actually only version 2.4.15 is supported
+    name : float
+        nominalVoltage: The power system resource's base voltage. Unit: kV
+
+
+    Returns
+    ------- 
+    mRID:
+        str containing the mRID of the BaseVoltage
+    cim_topologie:
+        dict containing the modified cim topology
+    """
+    # check if this voltage already exists in the topoplogy
+    for mRID, obj in cim_topologie.items():
+        if isinstance(obj, cimpy.cgmes_v2_4_15.BaseVoltage):
+            if (obj.nominalVoltage == nominalVoltage):
+                return mRID
+    
+    name = 'Base Voltage {:.2f}kV'.format(nominalVoltage)
+    mRID = str(uuid.uuid4())
+    
+    # create object of type BaseVoltage
+    module_name = "cimpy." + "cgmes_v2_4_15" + "."
     BaseVoltage_module = importlib.import_module((module_name + 'BaseVoltage'))
     BaseVoltage_class = getattr(BaseVoltage_module, 'BaseVoltage')
-    mBaseVoltage = BaseVoltage_class(nominalVoltage=nominalVoltage )
+    BaseVoltage = BaseVoltage_class(name=name, 
+                                    mRID=mRID,
+                                    nominalVoltage=nominalVoltage)
+    cim_topologie[mRID] = BaseVoltage
 
-    return mBaseVoltage
+    return BaseVoltage
 
 # Switch Module with infinity Conductance to simulate a short circuit in network "import_result" at the node with name "mRID"
 def add_ShortCircuit_Switch(import_result, version, mRID, name = "ShortCircuit_Switch"):
@@ -620,9 +901,6 @@ def add_ShortCircuit_Switch(import_result, version, mRID, name = "ShortCircuit_S
     import_result['topology'] = res
 
     return import_result
-
-        
-
 
 # Switch Module with zero Conductance to simulate an open clamp in network "import_result" at the node with name "mRID"
 def add_OpenClamp_Switch(import_result, version, mRID, name = "OpenClamp_Switch"):
