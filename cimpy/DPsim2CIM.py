@@ -97,7 +97,7 @@ def DPsimToCIMpy (DPsim_system_PF, DPsim_simulation, DPsim_system_dyn=None, freq
             # determine the connected Nodes
             node_list =  node_of_comp(DPsim_system_PF, comp.name)
             cim_topology = utils.add_ACLineSegment(cim_topology=cim_topology, version="cgmes_v2_4_15", name=comp.name, 
-                                                   name_node1=node_list[0].mRID, name_node1=node_list[1].mRID, r=r, x=x, bch=bch, gch=gch, baseVoltage=baseVoltage)        
+                                                   name_node1=node_list[0].mRID, name_node2=node_list[1].mRID, r=r, x=x, bch=bch, gch=gch, baseVoltage=baseVoltage)        
             logging.debug('Added PiLine: \n\tname={}, \n\tL={}, \n\tR={}, \n\tC={}, \n\tG={}, \n\tbaseVoltage={}, \n\tnode1 name={}, \n\tnode 2 name={}'.format(
                     comp.name, r, x, bch, gch, base_voltage, node_list[0].name, node_list[1].name))
 
@@ -210,7 +210,7 @@ def get_node_base_voltage(DPsim_system_PF, node):
             break
         elif isinstance(comp, dpsimpy.sp.ph1.Transformer):
             if comp.get_terminal(0).node().name == node.name:
-                base_voltage = unitValue(comp.attr("nominal_voltage_end1") Multiplier.m)
+                base_voltage = unitValue(comp.attr("nominal_voltage_end1"), Multiplier.m)
                 logging.info('Choose base voltage {}kV of {} for node "{}", TransformerEnd: 1', base_voltage, comp.name, node.name)
                 break
             elif comp.get_terminal(1).node().name == node.name:

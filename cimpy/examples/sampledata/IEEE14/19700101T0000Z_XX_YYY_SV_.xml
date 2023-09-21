@@ -1,200 +1,209 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- Created with PowerFactory 20.0.4 (digcimdb.dll ServicePack 0) -->
+<!-- Created with PowerFactory 19.0.5 (digcimdb.dll ServicePack 0) -->
 <rdf:RDF xmlns:cim="http://iec.ch/TC57/2013/CIM-schema-cim16#" xmlns:entsoe="http://entsoe.eu/CIM/SchemaExtension/3/1#" xmlns:md="http://iec.ch/TC57/61970-552/ModelDescription/1#" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
-  <md:FullModel rdf:about="urn:uuid:0e70d979-f7d2-4bfd-96a6-d1b0b926148b">
-    <md:Model.DependentOn rdf:resource="urn:uuid:6b0ccb5c-34f2-4672-90ec-09218407d5ca" />
-    <md:Model.DependentOn rdf:resource="urn:uuid:1599e402-5919-4771-87be-2b418a032524" />
-    <md:Model.created>2023-08-25T09:31:32Z</md:Model.created>
-    <md:Model.modelingAuthoritySet>ACS</md:Model.modelingAuthoritySet>
+  <md:FullModel rdf:about="urn:uuid:aee24307-9f94-46b5-bc69-78997f778dae">
+    <md:Model.DependentOn rdf:resource="urn:uuid:0b588055-620d-40a3-b0b3-3a5c9a6a2de0" />
+    <md:Model.DependentOn rdf:resource="urn:uuid:ab9b919c-8917-401c-85e0-96d72f2b2e7c" />
+    <md:Model.created>2023-08-04T08:19:41Z</md:Model.created>
+    <md:Model.modelingAuthoritySet>PowerFactory</md:Model.modelingAuthoritySet>
     <md:Model.profile>http://entsoe.eu/CIM/StateVariables/4/1</md:Model.profile>
     <md:Model.scenarioTime>1970-01-01T00:00:00Z</md:Model.scenarioTime>
   </md:FullModel>
-  <cim:SvPowerFlow rdf:ID="_d272ad7f-25e7-4565-a9fd-ab85265a8bf6">
-    <cim:SvPowerFlow.Terminal rdf:resource="#_ae796c42-33c9-21c6-69d4-313625fe889d" />
-    <cim:SvPowerFlow.p>0.</cim:SvPowerFlow.p>
-    <cim:SvPowerFlow.q>-27.6962</cim:SvPowerFlow.q>
-  </cim:SvPowerFlow>
-  <cim:SvPowerFlow rdf:ID="_cd38bd32-c4e1-4349-9a2f-1f42fabaed50">
-    <cim:SvPowerFlow.Terminal rdf:resource="#_0fb58494-689e-1fe3-97b3-1f298aa498a7" />
-    <cim:SvPowerFlow.p>3.5</cim:SvPowerFlow.p>
-    <cim:SvPowerFlow.q>1.8</cim:SvPowerFlow.q>
-  </cim:SvPowerFlow>
-  <cim:SvPowerFlow rdf:ID="_5a1b71f4-b582-45c7-87ca-449ef8a5ce0e">
-    <cim:SvPowerFlow.Terminal rdf:resource="#_b2724c37-5e21-f6eb-ad83-a8bc45dc6194" />
-    <cim:SvPowerFlow.p>9.</cim:SvPowerFlow.p>
-    <cim:SvPowerFlow.q>5.8</cim:SvPowerFlow.q>
-  </cim:SvPowerFlow>
-  <cim:SvPowerFlow rdf:ID="_d7efc39a-8f73-435e-a8ea-e1ef0d58c4fc">
-    <cim:SvPowerFlow.Terminal rdf:resource="#_0c323792-fa08-8ad3-ec8f-f737eabe5b74" />
-    <cim:SvPowerFlow.p>0.</cim:SvPowerFlow.p>
-    <cim:SvPowerFlow.q>-18.3497</cim:SvPowerFlow.q>
-  </cim:SvPowerFlow>
-  <cim:SvPowerFlow rdf:ID="_5536ef2d-0e44-4155-9b1b-335aa7534a10">
-    <cim:SvPowerFlow.Terminal rdf:resource="#_5b7b3ccb-7d8d-72e5-1227-ca1d7b69136a" />
-    <cim:SvPowerFlow.p>6.1</cim:SvPowerFlow.p>
-    <cim:SvPowerFlow.q>1.6</cim:SvPowerFlow.q>
-  </cim:SvPowerFlow>
-  <cim:SvPowerFlow rdf:ID="_a2fa28a1-65a5-4e52-a140-9c16963a2f77">
-    <cim:SvPowerFlow.Terminal rdf:resource="#_cf9f8e42-9c32-36e9-496c-b135ce6a3262" />
-    <cim:SvPowerFlow.p>47.8</cim:SvPowerFlow.p>
-    <cim:SvPowerFlow.q>-3.9</cim:SvPowerFlow.q>
-  </cim:SvPowerFlow>
-  <cim:SvPowerFlow rdf:ID="_a3624313-9440-4831-9b25-30a3736764f2">
-    <cim:SvPowerFlow.Terminal rdf:resource="#_51fe5045-7f2f-d827-6b9a-8c6fea472dd0" />
-    <cim:SvPowerFlow.p>-232.529</cim:SvPowerFlow.p>
-    <cim:SvPowerFlow.q>22.8611</cim:SvPowerFlow.q>
-  </cim:SvPowerFlow>
-  <cim:SvPowerFlow rdf:ID="_8c92ff99-2614-4adc-82ef-7cd69fe06bb6">
-    <cim:SvPowerFlow.Terminal rdf:resource="#_4f64ca88-8568-f4fa-848f-a53d2d76d6ee" />
+  <cim:SvPowerFlow rdf:ID="_17fee37f-eae1-4f09-abc3-e9f5f9125ecb">
+    <cim:SvPowerFlow.Terminal rdf:resource="#_3da1d489-7e40-54c5-8a09-6b4f45e7c221" />
     <cim:SvPowerFlow.p>7.6</cim:SvPowerFlow.p>
     <cim:SvPowerFlow.q>1.6</cim:SvPowerFlow.q>
   </cim:SvPowerFlow>
-  <cim:SvPowerFlow rdf:ID="_1334c682-069b-4343-8d02-74c9e68f59b7">
-    <cim:SvPowerFlow.Terminal rdf:resource="#_ca332304-6d55-54cf-f375-53907c6801d1" />
-    <cim:SvPowerFlow.p>14.9</cim:SvPowerFlow.p>
-    <cim:SvPowerFlow.q>5.</cim:SvPowerFlow.q>
-  </cim:SvPowerFlow>
-  <cim:SvPowerFlow rdf:ID="_a04f5bec-8ed5-4ec3-a344-84ee94a3be56">
-    <cim:SvPowerFlow.Terminal rdf:resource="#_3a568810-6563-7132-4e35-f36edb7756c7" />
-    <cim:SvPowerFlow.p>-40.0001</cim:SvPowerFlow.p>
-    <cim:SvPowerFlow.q>-29.5627</cim:SvPowerFlow.q>
-  </cim:SvPowerFlow>
-  <cim:SvPowerFlow rdf:ID="_b3720927-8511-4518-94a4-8e7601d6c9f4">
-    <cim:SvPowerFlow.Terminal rdf:resource="#_53222649-9230-0f19-c7b3-0a43a4eb2eb9" />
-    <cim:SvPowerFlow.p>11.2</cim:SvPowerFlow.p>
-    <cim:SvPowerFlow.q>7.5</cim:SvPowerFlow.q>
-  </cim:SvPowerFlow>
-  <cim:SvPowerFlow rdf:ID="_ea4620ee-5e31-4a2c-8b98-2750d5c13c3e">
-    <cim:SvPowerFlow.Terminal rdf:resource="#_3c6d955c-874c-ac70-a5a4-42fc9021a2e1" />
-    <cim:SvPowerFlow.p>13.5</cim:SvPowerFlow.p>
-    <cim:SvPowerFlow.q>5.8</cim:SvPowerFlow.q>
-  </cim:SvPowerFlow>
-  <cim:SvPowerFlow rdf:ID="_cbf01778-c9ee-494e-a88b-2d8f28652b28">
-    <cim:SvPowerFlow.Terminal rdf:resource="#_25dc4fd2-4f15-b35a-bf77-81a1a61df6f3" />
-    <cim:SvPowerFlow.p>0.</cim:SvPowerFlow.p>
-    <cim:SvPowerFlow.q>-48.6425</cim:SvPowerFlow.q>
-  </cim:SvPowerFlow>
-  <cim:SvPowerFlow rdf:ID="_08b50d3c-edd5-4ad4-a974-2713e2fe6f46">
-    <cim:SvPowerFlow.Terminal rdf:resource="#_a7dd840f-fcc0-142d-d18b-1e74f31f17b5" />
-    <cim:SvPowerFlow.p>21.7</cim:SvPowerFlow.p>
-    <cim:SvPowerFlow.q>12.7</cim:SvPowerFlow.q>
-  </cim:SvPowerFlow>
-  <cim:SvPowerFlow rdf:ID="_4f283aed-c953-45a8-95dc-e31cbca4609b">
-    <cim:SvPowerFlow.Terminal rdf:resource="#_953dfdeb-c096-636a-710e-717fd0e42518" />
+  <cim:SvPowerFlow rdf:ID="_a9a930e5-8e29-4eb0-8db5-41259a3577de">
+    <cim:SvPowerFlow.Terminal rdf:resource="#_70377caa-d185-064e-b162-0dd5e78eaf91" />
     <cim:SvPowerFlow.p>94.2</cim:SvPowerFlow.p>
     <cim:SvPowerFlow.q>19.</cim:SvPowerFlow.q>
   </cim:SvPowerFlow>
-  <cim:SvPowerFlow rdf:ID="_7aa6ae6d-0eee-4f9b-8faf-e8314d0335bd">
-    <cim:SvPowerFlow.Terminal rdf:resource="#_6ef93684-5ed9-6a6a-b22d-e073e330ae50" />
+  <cim:SvPowerFlow rdf:ID="_fc261507-8db9-4aa5-8c9d-d69a2ef2b272">
+    <cim:SvPowerFlow.Terminal rdf:resource="#_11350fea-f6f3-3d93-9d8f-2f4b7dba14fb" />
+    <cim:SvPowerFlow.p>14.9</cim:SvPowerFlow.p>
+    <cim:SvPowerFlow.q>5.</cim:SvPowerFlow.q>
+  </cim:SvPowerFlow>
+  <cim:SvPowerFlow rdf:ID="_65fe03c8-a39e-49d8-8824-91b8d72c9d9b">
+    <cim:SvPowerFlow.Terminal rdf:resource="#_cb5a5eba-e7df-2baa-e57c-b56780cfe59b" />
+    <cim:SvPowerFlow.p>11.2</cim:SvPowerFlow.p>
+    <cim:SvPowerFlow.q>7.5</cim:SvPowerFlow.q>
+  </cim:SvPowerFlow>
+  <cim:SvPowerFlow rdf:ID="_a10944d0-ef11-41c9-b298-a1433817a5b0">
+    <cim:SvPowerFlow.Terminal rdf:resource="#_f64386af-0fe6-e64e-fcb9-8c4d28e0fe99" />
+    <cim:SvPowerFlow.p>47.8</cim:SvPowerFlow.p>
+    <cim:SvPowerFlow.q>-3.9</cim:SvPowerFlow.q>
+  </cim:SvPowerFlow>
+  <cim:SvPowerFlow rdf:ID="_5a3df89c-aa90-4636-8b27-b575e3c450e6">
+    <cim:SvPowerFlow.Terminal rdf:resource="#_31093e9a-2ee8-b5ad-f5c1-bdeb407a4039" />
+    <cim:SvPowerFlow.p>3.5</cim:SvPowerFlow.p>
+    <cim:SvPowerFlow.q>1.8</cim:SvPowerFlow.q>
+  </cim:SvPowerFlow>
+  <cim:SvPowerFlow rdf:ID="_669831b1-b936-4793-88ec-d785300133e2">
+    <cim:SvPowerFlow.Terminal rdf:resource="#_4dd01519-b18e-e39d-12c7-6644d89e52f6" />
+    <cim:SvPowerFlow.p>13.5</cim:SvPowerFlow.p>
+    <cim:SvPowerFlow.q>5.8</cim:SvPowerFlow.q>
+  </cim:SvPowerFlow>
+  <cim:SvPowerFlow rdf:ID="_8e02342a-8412-4633-a39e-2fc8134a9c6a">
+    <cim:SvPowerFlow.Terminal rdf:resource="#_50932cc8-bea6-282f-89f8-48c6e3556d8a" />
+    <cim:SvPowerFlow.p>9.</cim:SvPowerFlow.p>
+    <cim:SvPowerFlow.q>5.8</cim:SvPowerFlow.q>
+  </cim:SvPowerFlow>
+  <cim:SvPowerFlow rdf:ID="_b91ccbdd-5d22-4889-a2aa-ff98cbc639c6">
+    <cim:SvPowerFlow.Terminal rdf:resource="#_b110f799-bca5-1ae5-836a-7c3ad39dd811" />
+    <cim:SvPowerFlow.p>21.7</cim:SvPowerFlow.p>
+    <cim:SvPowerFlow.q>12.7</cim:SvPowerFlow.q>
+  </cim:SvPowerFlow>
+  <cim:SvPowerFlow rdf:ID="_fd6d81b5-12bc-4572-ae0a-103d5e0e3e79">
+    <cim:SvPowerFlow.Terminal rdf:resource="#_f136260b-2614-a160-d015-c91c7815be39" />
     <cim:SvPowerFlow.p>29.5</cim:SvPowerFlow.p>
     <cim:SvPowerFlow.q>16.6</cim:SvPowerFlow.q>
   </cim:SvPowerFlow>
-  <cim:SvVoltage rdf:ID="_618fced8-13f9-4648-920b-f39f264d1d4a">
-    <cim:SvVoltage.TopologicalNode rdf:resource="#_3296d00e-7ee2-096b-d7c9-2842cf52edad" />
+  <cim:SvPowerFlow rdf:ID="_7252712b-7377-4f0b-895d-e4c10275cd4b">
+    <cim:SvPowerFlow.Terminal rdf:resource="#_ca77de59-39a8-c04f-174f-7854ba32c4b6" />
+    <cim:SvPowerFlow.p>6.1</cim:SvPowerFlow.p>
+    <cim:SvPowerFlow.q>1.6</cim:SvPowerFlow.q>
+  </cim:SvPowerFlow>
+  <cim:SvPowerFlow rdf:ID="_51fa3d5e-b3ff-447c-b8b5-1d99b9183ec6">
+    <cim:SvPowerFlow.Terminal rdf:resource="#_a18d2e0d-b803-01c7-0799-b80ac3bdc804" />
+    <cim:SvPowerFlow.p>0.</cim:SvPowerFlow.p>
+    <cim:SvPowerFlow.q>-23.3934</cim:SvPowerFlow.q>
+  </cim:SvPowerFlow>
+  <cim:SvPowerFlow rdf:ID="_0efdcea1-44be-45be-b897-d323b3036409">
+    <cim:SvPowerFlow.Terminal rdf:resource="#_215c4fc0-d037-f650-ca5b-8ade96bbbb53" />
+    <cim:SvPowerFlow.p>-232.386</cim:SvPowerFlow.p>
+    <cim:SvPowerFlow.q>16.889</cim:SvPowerFlow.q>
+  </cim:SvPowerFlow>
+  <cim:SvPowerFlow rdf:ID="_47a227df-5acc-44ab-9c47-049a6840750f">
+    <cim:SvPowerFlow.Terminal rdf:resource="#_18d5a3a4-7b4b-d5c7-ddd9-2c126cf2d3be" />
+    <cim:SvPowerFlow.p>0.</cim:SvPowerFlow.p>
+    <cim:SvPowerFlow.q>-21.2015</cim:SvPowerFlow.q>
+  </cim:SvPowerFlow>
+  <cim:SvPowerFlow rdf:ID="_7550cbeb-1836-47fe-b2ed-1de190f9fb2e">
+    <cim:SvPowerFlow.Terminal rdf:resource="#_82691135-6e4e-4156-04e5-0af897ba4b14" />
+    <cim:SvPowerFlow.p>-40.0001</cim:SvPowerFlow.p>
+    <cim:SvPowerFlow.q>-42.3962</cim:SvPowerFlow.q>
+  </cim:SvPowerFlow>
+  <cim:SvPowerFlow rdf:ID="_7895074b-45d9-46af-a748-5aead9f19308">
+    <cim:SvPowerFlow.Terminal rdf:resource="#_109bf3af-082d-61cc-aa30-662500f3162e" />
+    <cim:SvPowerFlow.p>0.</cim:SvPowerFlow.p>
+    <cim:SvPowerFlow.q>-17.3565</cim:SvPowerFlow.q>
+  </cim:SvPowerFlow>
+  <cim:SvPowerFlow rdf:ID="_38460d47-1435-491f-ac5b-75a97e546d85">
+    <cim:SvPowerFlow.Terminal rdf:resource="#_66c572aa-b6d7-5e1f-9956-87f843dd55f5" />
+    <cim:SvPowerFlow.p>0.</cim:SvPowerFlow.p>
+    <cim:SvPowerFlow.q>-12.24</cim:SvPowerFlow.q>
+  </cim:SvPowerFlow>
+  <cim:SvVoltage rdf:ID="_bdff7e76-cd17-4946-8938-f56e8ba062da">
+    <cim:SvVoltage.TopologicalNode rdf:resource="#_b2e35f92-55be-fcea-9d8b-5af0b03dcc34" />
+    <cim:SvVoltage.angle>-14.2226</cim:SvVoltage.angle>
+    <cim:SvVoltage.v>35.31</cim:SvVoltage.v>
+  </cim:SvVoltage>
+  <cim:SvVoltage rdf:ID="_ea8a9973-8630-4ded-acd5-e3d8dddbf370">
+    <cim:SvVoltage.TopologicalNode rdf:resource="#_432f6b40-c642-ecad-e98f-951505f5a8f9" />
+    <cim:SvVoltage.angle>-15.0774</cim:SvVoltage.angle>
+    <cim:SvVoltage.v>34.8223</cim:SvVoltage.v>
+  </cim:SvVoltage>
+  <cim:SvVoltage rdf:ID="_3d303fdf-89ce-4f91-af09-61e0af89a985">
+    <cim:SvVoltage.TopologicalNode rdf:resource="#_e86e5b76-c323-0298-3647-c7920a41ad35" />
+    <cim:SvVoltage.angle>-12.718</cim:SvVoltage.angle>
+    <cim:SvVoltage.v>133.32</cim:SvVoltage.v>
+  </cim:SvVoltage>
+  <cim:SvVoltage rdf:ID="_76942f9f-74d5-4345-a4c5-776b8dbada28">
+    <cim:SvVoltage.TopologicalNode rdf:resource="#_901b81b9-b0d7-78aa-7d44-e1939bfec19e" />
+    <cim:SvVoltage.angle>-16.0389</cim:SvVoltage.angle>
+    <cim:SvVoltage.v>34.1813</cim:SvVoltage.v>
+  </cim:SvVoltage>
+  <cim:SvVoltage rdf:ID="_5362054a-4ba6-464f-8214-d7f16daa0391">
+    <cim:SvVoltage.TopologicalNode rdf:resource="#_20974d78-1aad-78d3-f55b-a8acfe4b5034" />
+    <cim:SvVoltage.angle>-8.78257</cim:SvVoltage.angle>
+    <cim:SvVoltage.v>134.675</cim:SvVoltage.v>
+  </cim:SvVoltage>
+  <cim:SvVoltage rdf:ID="_61fde396-cea7-4576-9bb6-2fff51f6e821">
+    <cim:SvVoltage.TopologicalNode rdf:resource="#_5732b6d1-bc4a-5bc7-c611-80909d9bbfe8" />
+    <cim:SvVoltage.angle>-14.7953</cim:SvVoltage.angle>
+    <cim:SvVoltage.v>34.8837</cim:SvVoltage.v>
+  </cim:SvVoltage>
+  <cim:SvVoltage rdf:ID="_391f5043-d7e1-45ce-b093-a80cbcd91209">
+    <cim:SvVoltage.TopologicalNode rdf:resource="#_16759bc8-872a-e3a5-d4f4-19112dc29b38" />
+    <cim:SvVoltage.angle>-13.3682</cim:SvVoltage.angle>
+    <cim:SvVoltage.v>1.06195</cim:SvVoltage.v>
+  </cim:SvVoltage>
+  <cim:SvVoltage rdf:ID="_70997ce5-b637-412b-ac59-bc5d13603fb9">
+    <cim:SvVoltage.TopologicalNode rdf:resource="#_2f701ddb-97f1-a6b6-f496-8b188c691140" />
+    <cim:SvVoltage.angle>-13.3682</cim:SvVoltage.angle>
+    <cim:SvVoltage.v>11.99</cim:SvVoltage.v>
+  </cim:SvVoltage>
+  <cim:SvVoltage rdf:ID="_bf967417-2cef-4009-9032-c97e57e5e86c">
+    <cim:SvVoltage.TopologicalNode rdf:resource="#_25af8883-fd1b-f3a4-b482-6f8b4d6b3930" />
+    <cim:SvVoltage.angle>-14.9466</cim:SvVoltage.angle>
+    <cim:SvVoltage.v>34.8594</cim:SvVoltage.v>
+  </cim:SvVoltage>
+  <cim:SvVoltage rdf:ID="_358a171e-98c1-4afe-b707-3e40bc341927">
+    <cim:SvVoltage.TopologicalNode rdf:resource="#_a1f14e91-7a1a-5af9-4ed2-dceac1d59ace" />
+    <cim:SvVoltage.angle>-15.1589</cim:SvVoltage.angle>
+    <cim:SvVoltage.v>34.6646</cim:SvVoltage.v>
+  </cim:SvVoltage>
+  <cim:SvVoltage rdf:ID="_cc332bbd-4ab1-4ec8-ac5f-dc502951146d">
+    <cim:SvVoltage.TopologicalNode rdf:resource="#_57b2860d-5c8d-1361-fc37-c87e5d6acdf3" />
     <cim:SvVoltage.angle>0.</cim:SvVoltage.angle>
     <cim:SvVoltage.v>139.92</cim:SvVoltage.v>
   </cim:SvVoltage>
-  <cim:SvVoltage rdf:ID="_d8ef71a9-9411-4e01-aa44-a336c213b017">
-    <cim:SvVoltage.TopologicalNode rdf:resource="#_ab2d29dc-19f8-2fc0-5926-e24d5d35d6cc" />
-    <cim:SvVoltage.angle>-15.2178</cim:SvVoltage.angle>
-    <cim:SvVoltage.v>34.4888</cim:SvVoltage.v>
-  </cim:SvVoltage>
-  <cim:SvVoltage rdf:ID="_c41c152e-3f02-4ce1-9a00-17640a98e8fa">
-    <cim:SvVoltage.TopologicalNode rdf:resource="#_fc5a859e-c988-44d2-472a-e6dcc717d4bd" />
-    <cim:SvVoltage.angle>-14.8808</cim:SvVoltage.angle>
-    <cim:SvVoltage.v>35.31</cim:SvVoltage.v>
-  </cim:SvVoltage>
-  <cim:SvVoltage rdf:ID="_77f6e1c6-35a9-4076-93a2-bbb37610f2e2">
-    <cim:SvVoltage.TopologicalNode rdf:resource="#_4cb7b402-e499-b4b2-d1ba-cffdd44758f1" />
-    <cim:SvVoltage.angle>-15.3251</cim:SvVoltage.angle>
-    <cim:SvVoltage.v>33.9201</cim:SvVoltage.v>
-  </cim:SvVoltage>
-  <cim:SvVoltage rdf:ID="_ff7e3c6a-f99c-410d-8376-525c9ff63259">
-    <cim:SvVoltage.TopologicalNode rdf:resource="#_e511d294-e2a0-0ebf-462b-642ad50ea877" />
-    <cim:SvVoltage.angle>-15.7213</cim:SvVoltage.angle>
-    <cim:SvVoltage.v>34.7506</cim:SvVoltage.v>
-  </cim:SvVoltage>
-  <cim:SvVoltage rdf:ID="_483e831d-3a2b-460c-a2df-5946c7034a22">
-    <cim:SvVoltage.TopologicalNode rdf:resource="#_f6b080e8-e604-38fd-e454-27d175525740" />
-    <cim:SvVoltage.angle>-10.3777</cim:SvVoltage.angle>
-    <cim:SvVoltage.v>135.574</cim:SvVoltage.v>
-  </cim:SvVoltage>
-  <cim:SvVoltage rdf:ID="_9402129a-fb45-4ce5-8d24-2680f2156130">
-    <cim:SvVoltage.TopologicalNode rdf:resource="#_87033c50-2dc8-2a20-5cf3-e26203dccd2d" />
-    <cim:SvVoltage.angle>-13.459</cim:SvVoltage.angle>
-    <cim:SvVoltage.v>11.99</cim:SvVoltage.v>
-  </cim:SvVoltage>
-  <cim:SvVoltage rdf:ID="_bc97f347-c243-43a6-9159-fdb1a797891d">
-    <cim:SvVoltage.TopologicalNode rdf:resource="#_539d8ddf-9fec-27b2-240d-5a67330e8f49" />
-    <cim:SvVoltage.angle>-12.6258</cim:SvVoltage.angle>
-    <cim:SvVoltage.v>133.32</cim:SvVoltage.v>
-  </cim:SvVoltage>
-  <cim:SvVoltage rdf:ID="_7878517d-af99-4fc5-b301-c64478998d73">
-    <cim:SvVoltage.TopologicalNode rdf:resource="#_c89ad93d-08be-8002-09aa-46ad01e32c6f" />
-    <cim:SvVoltage.angle>-4.95499</cim:SvVoltage.angle>
+  <cim:SvVoltage rdf:ID="_6333b6ea-9aca-4a1d-9c21-95dbb6d621d7">
+    <cim:SvVoltage.TopologicalNode rdf:resource="#_f1b7a33c-1135-6321-28cf-a8acb3a66b61" />
+    <cim:SvVoltage.angle>-4.98095</cim:SvVoltage.angle>
     <cim:SvVoltage.v>137.94</cim:SvVoltage.v>
   </cim:SvVoltage>
-  <cim:SvVoltage rdf:ID="_909001d7-72be-4e9c-ae98-12790ebb6fcd">
-    <cim:SvVoltage.TopologicalNode rdf:resource="#_ff7e0a2d-e37b-63f6-10c2-37b173745cf5" />
-    <cim:SvVoltage.angle>-15.7407</cim:SvVoltage.angle>
-    <cim:SvVoltage.v>34.5277</cim:SvVoltage.v>
+  <cim:SvVoltage rdf:ID="_4556f406-aa07-489e-b4ae-b52ef2257377">
+    <cim:SvVoltage.TopologicalNode rdf:resource="#_73dacfe6-4f37-a1b3-23b4-2f15f4842241" />
+    <cim:SvVoltage.angle>-15.1043</cim:SvVoltage.angle>
+    <cim:SvVoltage.v>34.6938</cim:SvVoltage.v>
   </cim:SvVoltage>
-  <cim:SvVoltage rdf:ID="_efb025e6-4a62-4b33-8d2b-5b770266a2da">
-    <cim:SvVoltage.TopologicalNode rdf:resource="#_6336d578-9f17-4ab2-9f8a-952b963b94f1" />
-    <cim:SvVoltage.angle>-8.9559</cim:SvVoltage.angle>
-    <cim:SvVoltage.v>136.406</cim:SvVoltage.v>
+  <cim:SvVoltage rdf:ID="_cc07c96a-2947-4267-b091-8c0fa6d9f9f9">
+    <cim:SvVoltage.TopologicalNode rdf:resource="#_8b4159f5-6562-fcb5-cc7b-3de69a428d1a" />
+    <cim:SvVoltage.angle>-10.3242</cim:SvVoltage.angle>
+    <cim:SvVoltage.v>134.458</cim:SvVoltage.v>
   </cim:SvVoltage>
-  <cim:SvVoltage rdf:ID="_351afa5c-fb4a-427f-831e-c9bb97611bd9">
-    <cim:SvVoltage.TopologicalNode rdf:resource="#_1b1792e2-6f63-6de2-d0f6-e997449f135f" />
-    <cim:SvVoltage.angle>-15.078</cim:SvVoltage.angle>
-    <cim:SvVoltage.v>33.9253</cim:SvVoltage.v>
-  </cim:SvVoltage>
-  <cim:SvVoltage rdf:ID="_8e82b463-b340-41a9-b49a-e502bffa362d">
-    <cim:SvVoltage.TopologicalNode rdf:resource="#_0f3f2a5a-9690-547f-5734-25b3f41b5a13" />
-    <cim:SvVoltage.angle>-16.3991</cim:SvVoltage.angle>
-    <cim:SvVoltage.v>33.5839</cim:SvVoltage.v>
-  </cim:SvVoltage>
-  <cim:SvVoltage rdf:ID="_7a3ee10d-4e7d-4fc5-bc20-5a67cf9d3d89">
-    <cim:SvVoltage.TopologicalNode rdf:resource="#_88342876-0293-2deb-b01b-f699c9c5c2c5" />
-    <cim:SvVoltage.angle>-13.4591</cim:SvVoltage.angle>
-    <cim:SvVoltage.v>1.04524</cim:SvVoltage.v>
-  </cim:SvVoltage>
-  <cim:SvTapStep rdf:ID="_bced2905-c09e-474d-b794-fb7f52fc9c0b">
-    <cim:SvTapStep.TapChanger rdf:resource="#_6dd2f8f5-9244-32f5-ac6a-03b0990bca3c" />
+  <cim:SvTapStep rdf:ID="_7bf1055d-0b7e-44f3-8131-4e43ba71f48c">
+    <cim:SvTapStep.TapChanger rdf:resource="#_a967639e-6506-34bd-b11b-d4afb6ed8a37" />
+    <cim:SvTapStep.position>-1.</cim:SvTapStep.position>
+  </cim:SvTapStep>
+  <cim:SvTapStep rdf:ID="_b1b059e8-1ad3-4c2a-a066-b54725a3c6c9">
+    <cim:SvTapStep.TapChanger rdf:resource="#_0be4f8d2-0c4d-9e3c-ea9b-057c5a3029a4" />
     <cim:SvTapStep.position>0.</cim:SvTapStep.position>
   </cim:SvTapStep>
-  <cim:SvTapStep rdf:ID="_903b106e-2b62-41ab-91cc-6a93bc279a71">
-    <cim:SvTapStep.TapChanger rdf:resource="#_56d239a3-4e82-765b-eb29-6b3feb344683" />
+  <cim:SvTapStep rdf:ID="_17b7c4e9-345b-4462-abe5-bb4ceb12fd84">
+    <cim:SvTapStep.TapChanger rdf:resource="#_3dcbece1-d5d5-b880-bc45-e7ea898aa6b2" />
     <cim:SvTapStep.position>0.</cim:SvTapStep.position>
   </cim:SvTapStep>
-  <cim:SvTapStep rdf:ID="_670669ef-4f4c-4fb1-98ff-08f181726407">
-    <cim:SvTapStep.TapChanger rdf:resource="#_ff3a3ca0-9177-0458-eb44-f788b12a48bd" />
-    <cim:SvTapStep.position>0.</cim:SvTapStep.position>
+  <cim:SvTapStep rdf:ID="_91fd0190-25d7-4928-8bd8-fcb75782fb59">
+    <cim:SvTapStep.TapChanger rdf:resource="#_83b75086-4dcc-938f-b240-2cc4516766f0" />
+    <cim:SvTapStep.position>-1.</cim:SvTapStep.position>
   </cim:SvTapStep>
-  <cim:SvTapStep rdf:ID="_a119cc67-e76f-447b-b0c8-fa166f745f39">
-    <cim:SvTapStep.TapChanger rdf:resource="#_8ba26e16-551c-8cb7-cc42-c02c9488a252" />
-    <cim:SvTapStep.position>0.</cim:SvTapStep.position>
+  <cim:SvTapStep rdf:ID="_47a5def9-c216-4b71-8bf1-dc2e5564294e">
+    <cim:SvTapStep.TapChanger rdf:resource="#_341779ff-7052-9f65-f52b-9dcde271ac76" />
+    <cim:SvTapStep.position>-1.</cim:SvTapStep.position>
   </cim:SvTapStep>
-  <cim:SvTapStep rdf:ID="_f52f2385-3531-4542-a438-b01a49826ade">
-    <cim:SvTapStep.TapChanger rdf:resource="#_c94675e7-bdbf-4ebf-a268-c7e3c2754049" />
-    <cim:SvTapStep.position>0.</cim:SvTapStep.position>
-  </cim:SvTapStep>
-  <cim:TopologicalIsland rdf:ID="_13534237-9e1b-44fe-b213-20e724a90355">
+  <cim:SvShuntCompensatorSections rdf:ID="_94a1d645-6996-4999-9623-5f63737f0fbc">
+    <cim:SvShuntCompensatorSections.ShuntCompensator rdf:resource="#_f8cd761d-bf93-48cd-b319-e64a5b338883" />
+    <cim:SvShuntCompensatorSections.sections>1.</cim:SvShuntCompensatorSections.sections>
+  </cim:SvShuntCompensatorSections>
+  <cim:TopologicalIsland rdf:ID="_b796775d-fb98-49dc-a376-0770db098525">
     <cim:IdentifiedObject.name>Island_001</cim:IdentifiedObject.name>
-    <cim:TopologicalIsland.AngleRefTopologicalNode rdf:resource="#_3296d00e-7ee2-096b-d7c9-2842cf52edad" />
-    <cim:TopologicalIsland.TopologicalNodes rdf:resource="#_87033c50-2dc8-2a20-5cf3-e26203dccd2d" />
-    <cim:TopologicalIsland.TopologicalNodes rdf:resource="#_ab2d29dc-19f8-2fc0-5926-e24d5d35d6cc" />
-    <cim:TopologicalIsland.TopologicalNodes rdf:resource="#_1b1792e2-6f63-6de2-d0f6-e997449f135f" />
-    <cim:TopologicalIsland.TopologicalNodes rdf:resource="#_fc5a859e-c988-44d2-472a-e6dcc717d4bd" />
-    <cim:TopologicalIsland.TopologicalNodes rdf:resource="#_c89ad93d-08be-8002-09aa-46ad01e32c6f" />
-    <cim:TopologicalIsland.TopologicalNodes rdf:resource="#_f6b080e8-e604-38fd-e454-27d175525740" />
-    <cim:TopologicalIsland.TopologicalNodes rdf:resource="#_3296d00e-7ee2-096b-d7c9-2842cf52edad" />
-    <cim:TopologicalIsland.TopologicalNodes rdf:resource="#_0f3f2a5a-9690-547f-5734-25b3f41b5a13" />
-    <cim:TopologicalIsland.TopologicalNodes rdf:resource="#_88342876-0293-2deb-b01b-f699c9c5c2c5" />
-    <cim:TopologicalIsland.TopologicalNodes rdf:resource="#_e511d294-e2a0-0ebf-462b-642ad50ea877" />
-    <cim:TopologicalIsland.TopologicalNodes rdf:resource="#_4cb7b402-e499-b4b2-d1ba-cffdd44758f1" />
-    <cim:TopologicalIsland.TopologicalNodes rdf:resource="#_6336d578-9f17-4ab2-9f8a-952b963b94f1" />
-    <cim:TopologicalIsland.TopologicalNodes rdf:resource="#_539d8ddf-9fec-27b2-240d-5a67330e8f49" />
-    <cim:TopologicalIsland.TopologicalNodes rdf:resource="#_ff7e0a2d-e37b-63f6-10c2-37b173745cf5" />
+    <cim:TopologicalIsland.AngleRefTopologicalNode rdf:resource="#_57b2860d-5c8d-1361-fc37-c87e5d6acdf3" />
+    <cim:TopologicalIsland.TopologicalNodes rdf:resource="#_b2e35f92-55be-fcea-9d8b-5af0b03dcc34" />
+    <cim:TopologicalIsland.TopologicalNodes rdf:resource="#_73dacfe6-4f37-a1b3-23b4-2f15f4842241" />
+    <cim:TopologicalIsland.TopologicalNodes rdf:resource="#_432f6b40-c642-ecad-e98f-951505f5a8f9" />
+    <cim:TopologicalIsland.TopologicalNodes rdf:resource="#_901b81b9-b0d7-78aa-7d44-e1939bfec19e" />
+    <cim:TopologicalIsland.TopologicalNodes rdf:resource="#_e86e5b76-c323-0298-3647-c7920a41ad35" />
+    <cim:TopologicalIsland.TopologicalNodes rdf:resource="#_57b2860d-5c8d-1361-fc37-c87e5d6acdf3" />
+    <cim:TopologicalIsland.TopologicalNodes rdf:resource="#_f1b7a33c-1135-6321-28cf-a8acb3a66b61" />
+    <cim:TopologicalIsland.TopologicalNodes rdf:resource="#_8b4159f5-6562-fcb5-cc7b-3de69a428d1a" />
+    <cim:TopologicalIsland.TopologicalNodes rdf:resource="#_16759bc8-872a-e3a5-d4f4-19112dc29b38" />
+    <cim:TopologicalIsland.TopologicalNodes rdf:resource="#_5732b6d1-bc4a-5bc7-c611-80909d9bbfe8" />
+    <cim:TopologicalIsland.TopologicalNodes rdf:resource="#_20974d78-1aad-78d3-f55b-a8acfe4b5034" />
+    <cim:TopologicalIsland.TopologicalNodes rdf:resource="#_2f701ddb-97f1-a6b6-f496-8b188c691140" />
+    <cim:TopologicalIsland.TopologicalNodes rdf:resource="#_a1f14e91-7a1a-5af9-4ed2-dceac1d59ace" />
+    <cim:TopologicalIsland.TopologicalNodes rdf:resource="#_25af8883-fd1b-f3a4-b482-6f8b4d6b3930" />
   </cim:TopologicalIsland>
 </rdf:RDF>
