@@ -88,11 +88,11 @@ def DPsimToCIMpy (DPsim_system_PF, DPsim_simulation, DPsim_system_dyn=None, freq
     for comp in DPsim_system_PF.components:
         if isinstance(comp, dpsimpy.sp.ph1.PiLine):
             omega = 2*np.pi*frequency
-            r = comp.attr("R_series")
-            x = comp.attr("L_series") * omega
-            bch = comp.attr("C_parallel") * omega
-            gch = comp.attr("G_parallel")
-            base_voltage = unitValue(comp.attr("base_Voltage"), Multiplier.m) 
+            r = float(str(comp.attr("R_series")))
+            x = float(str(comp.attr("L_series"))) * omega
+            bch = float(str(comp.attr("C_parallel"))) * omega
+            gch = float(str(comp.attr("G_parallel")))
+            base_voltage = unitValue(float(str(comp.attr("base_Voltage"), Multiplier.m))) 
             
             # determine the connected Nodes
             node_list =  node_of_comp(DPsim_system_PF, comp.name)
@@ -102,9 +102,9 @@ def DPsimToCIMpy (DPsim_system_PF, DPsim_simulation, DPsim_system_dyn=None, freq
                     comp.name, r, x, bch, gch, base_voltage, node_list[0].name, node_list[1].name))
 
         elif "Load" in str(type(comp)):
-            p = unitValue(comp.attr("P"), Multiplier.micro) 
-            q = unitValue(comp.attr("Q"), Multiplier.micro) 
-            Vnom = unitValue(comp.attr("V_nom"), Multiplier.m) 
+            p = unitValue(float(str(comp.attr("P"), Multiplier.micro))) 
+            q = unitValue(float(str(comp.attr("Q"), Multiplier.micro)))
+            Vnom = unitValue(float(str(comp.attr("V_nom"), Multiplier.m))) 
             
             #determine the connected Node
             node = node_of_comp(DPsim_system_PF, comp.name)
@@ -114,11 +114,11 @@ def DPsimToCIMpy (DPsim_system_PF, DPsim_simulation, DPsim_system_dyn=None, freq
                             comp.name, p, q, Vnom, node.name))
 
         elif "Transformer" in str(type(comp)):
-            r = comp.attr("R")
-            x = comp.attr("L")
-            mNominalVoltageEnd1 = unitValue(comp.attr("nominal_voltage_end1"), Multiplier.m) 
-            mNominalVoltageEnd2 = unitValue(comp.attr("nominal_voltage_end2"), Multiplier.m) 
-            base_voltage =  unitValue(comp.attr("base_Voltage"), Multiplier.m) 
+            r = float(str(comp.attr("R")))
+            x = float(str(comp.attr("L")))
+            mNominalVoltageEnd1 = unitValue(float(str(comp.attr("nominal_voltage_end1"), Multiplier.m))) 
+            mNominalVoltageEnd2 = unitValue(float(str(comp.attr("nominal_voltage_end2"), Multiplier.m))) 
+            base_voltage =  unitValue(float(str(comp.attr("base_Voltage"))), Multiplier.m)
             
             #determine the connected Node
             node_list = node_of_comp(DPsim_system_PF, comp.name)
@@ -142,12 +142,12 @@ def DPsimToCIMpy (DPsim_system_PF, DPsim_simulation, DPsim_system_dyn=None, freq
                             comp.name, r, x, base_voltage, node1_name, node2_name))
     
         elif "SynchronGenerator":
-            p = unitValue(comp.attr("initElecPower").derive_real(), Multiplier.micro)
-            q = unitValue(comp.attr("initElecPower").derive_imag(), Multiplier.micro)
-            ratedS = unitValue(comp.attr("initElecPower").derive_mag(), Multiplier.micro)   # TODO: CHECK! MAYBE USE mAppparentPower?
+            p = unitValue(float(str(comp.attr("initElecPower").derive_real())), Multiplier.micro)
+            q = unitValue(float(str(comp.attr("initElecPower").derive_imag())), Multiplier.micro)
+            ratedS = unitValue(float(str(comp.attr("initElecPower").derive_mag())), Multiplier.micro)   # TODO: CHECK! MAYBE USE mAppparentPower?
             ratedU = unitValue(getattr(comp, "Vnom", 0), Multiplier.m)
-            targetValue = unitValue(comp.attr("V_set"), Multiplier.m)
-            initialP = unitValue(comp.attr("initElecPower").derive_real(), Multiplier.micro)
+            targetValue = unitValue(float(str(comp.attr("V_set"))), Multiplier.m)
+            initialP = unitValue(float(str(comp.attr("initElecPower").derive_real())), Multiplier.micro)
 
             #determine the connected Node
             node = node_of_comp(DPsim_system_PF, comp.name)
@@ -201,36 +201,36 @@ def get_node_base_voltage(DPsim_system_PF, node):
 
     for comp in DPsim_system_PF.components_at_node[node]:
         if isinstance(comp, dpsimpy.sp.ph1.AvVoltageSourceInverterDQ):
-            base_voltage = unitValue(np.mag(comp.attr("vnom")), Multiplier.m) 
+            base_voltage = unitValue(np.mag(float(str(comp.attr("vnom")))), Multiplier.m) 
             logging.info('Choose base voltage {}kV of {} for node "{}"', base_voltage, comp.name, node.name)
             break
         elif isinstance(comp, dpsimpy.sp.ph1.PiLine):
-            base_voltage = unitValue(comp.attr("base_Voltage"), Multiplier.m)   
+            base_voltage = unitValue(float(str(comp.attr("base_Voltage"))), Multiplier.m)   
             logging.info('Choose base voltage {}kV of {} for node "{}"', base_voltage, comp.name, node.name)
             break
         elif isinstance(comp, dpsimpy.sp.ph1.Transformer):
             if comp.get_terminal(0).node().name == node.name:
-                base_voltage = unitValue(comp.attr("nominal_voltage_end1"), Multiplier.m)
+                base_voltage = unitValue(float(str(comp.attr("nominal_voltage_end1"))), Multiplier.m)
                 logging.info('Choose base voltage {}kV of {} for node "{}", TransformerEnd: 1', base_voltage, comp.name, node.name)
                 break
             elif comp.get_terminal(1).node().name == node.name:
-                base_voltage = unitValue(comp.attr("nominal_voltage_end2"), Multiplier.m)
+                base_voltage = unitValue(float(str(comp.attr("nominal_voltage_end2"))), Multiplier.m)
                 logging.info('Choose base voltage {}kV of {} for node "{}", TransformerEnd: 2', base_voltage, comp.name, node.name)
                 break
         elif isinstance(comp, dpsimpy.sp.ph1.SynchronGenerator):
-            base_voltage = unitValue(comp.attr("base_Voltage"), Multiplier.m)   
+            base_voltage = unitValue(float(str(comp.attr("base_Voltage"))), Multiplier.m)   
             logging.info('Choose base voltage {}kV of {} for node "{}"', base_voltage, comp.name, node.name)
             break
         elif isinstance(comp, dpsimpy.sp.ph1.SynchronGenerator):
-            base_voltage = unitValue(comp.attr("base_Voltage"), Multiplier.m)   
+            base_voltage = unitValue(float(str(comp.attr("base_Voltage"))), Multiplier.m)   
             logging.info('Choose base voltage {}kV of {} for node "{}"', base_voltage, comp.name, node.name)
             break  
         elif isinstance(comp, dpsimpy.sp.ph1.Load):
-            base_voltage = unitValue(comp.attr("base_Voltage"), Multiplier.m)   
+            base_voltage = unitValue(float(str(comp.attr("base_Voltage"))), Multiplier.m)   
             logging.info('Choose base voltage {}kV of {} for node "{}"', base_voltage, comp.name, node.name)
             break
         elif isinstance(comp, dpsimpy.sp.ph1.NetworkInjection):
-            base_voltage = unitValue(comp.attr("V_nom"), Multiplier.m)   
+            base_voltage = unitValue(float(str(comp.attr("V_nom"))), Multiplier.m)   
             logging.info('Choose base voltage {}kV of {} for node "{}"', base_voltage, comp.name, node.name)
             break
         else:
