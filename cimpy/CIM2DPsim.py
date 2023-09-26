@@ -210,7 +210,8 @@ def CIM2DPsim(CIM_network, domain, frequency = 60, log_level=dpsimpy.LogLevel.in
             if np.isclose(gen_v, 0):
                 gen_v=gen_baseV
                 logging.warn('No voltage set-point defined in SynchronousMachine "{}". Using set-point=baseVoltage.'.format(res[i].name))
-                    
+            
+            # TODO: set base power is not implemented in DPsim
             # set Parameters
             gen_pf.set_parameters(rated_apparent_power=gen_baseS, rated_voltage=gen_baseV, 
                       set_point_active_power=gen_p, set_point_voltage=gen_v, 
