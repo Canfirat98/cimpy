@@ -1,7 +1,7 @@
 import importlib
 import uuid
 import datetime
-import cimpy.cgmes_v2_4_15.TopologicalNode
+import cimpy.cgmes_v2_4_15
 
 def node_breaker_to_bus_branch(import_result):
     """TODO: Add documentation
@@ -144,7 +144,7 @@ def add_external_network_injection(import_result, version, mRID, voltage_set_poi
     return import_result
 
 
-def add_ACLineSegment(cim_topologie, version, name, mRID="", mRID_node1="", node1_name="", mRID_node2="", node2_name="", r=0, x=0, bch=0, gch=0, baseVoltage=0):
+def add_ACLineSegment(cim_topology, version, name, mRID="", mRID_node1="", node1_name="", mRID_node2="", node2_name="", r=0, x=0, bch=0, gch=0, baseVoltage=0):
     """
     Function to add ACLineSegment objects to existing cim topology
 
@@ -152,7 +152,7 @@ def add_ACLineSegment(cim_topologie, version, name, mRID="", mRID_node1="", node
 
     Parameters
     ----------
-    cim_topologie : dict
+    cim_topology : dict
         existing cim topology
     version : str
         cgmes version. Actually only version 2.4.15 is supported
@@ -181,24 +181,26 @@ def add_ACLineSegment(cim_topologie, version, name, mRID="", mRID_node1="", node
     dict containing the modified cim topology
     """
     
-    res = cim_topologie['topology']
+    res = cim_topology['topology']
     
     if name in res:
-        print('WARN: ACLineSegment mRID="{}" is already included in the cim topology, object will be not be addd to cim topology"', mRID)
-        return cim_topologie
+        print('WARN: ACLineSegment mRID={} is already included in the cim topology, object will be not be addd to cim topology"', mRID)
+        return cim_topology
 
     # Creating random mRID using uuid4()
     if mRID == "":
         mRID = str(uuid.uuid4())
         
-    if (node1_name!="" and mRID_node1==""):
+    if (mRID_node1==""):
         for uuid_, obj in res.items():
-            if (obj.name==node1_name):
-                mRID_node1=uuid_
-    if (node2_name!="" and mRID_node2==""):
+            if hasattr(obj, "name"):
+                if (obj.name==node1_name):
+                    mRID_node1=uuid_
+    if (mRID_node2==""):
         for uuid_, obj in res.items():
-            if (obj.name==node2_name):
-                mRID_node2=uuid_
+            if hasattr(obj, "name"):
+                if (obj.name==node2_name):
+                    mRID_node2=uuid_
     
     # look for topological nodels connected to line            
     TopologicalNode1 = None
@@ -252,22 +254,22 @@ def add_ACLineSegment(cim_topologie, version, name, mRID="", mRID_node1="", node
         res[mRID_node1].Terminal.append(res[terminal1_mRID])
         res[mRID_node2].Terminal.append(res[terminal2_mRID])
 
-        cim_topologie['topology'] = res
-        return cim_topologie
+        cim_topology['topology'] = res
+        return cim_topology
 
     elif TopologicalNode1 is None:
-        print('WARN: No Topological with mRID "{}" found in cim topology, ACLineSegment name="{}" will be not added to cim topology!', mRID_node1, name)
+        print('WARN: No Topological with mRID={} found in cim topology, ACLineSegment name={} will be not added to cim topology!'.format(mRID_node1, name))
         
     if TopologicalNode2 is None:
-        print('WARN: No Topological with mRID "{}" found in cim topology, ACLineSegment name="{}" will be not added to cim topology!', mRID_node2, name)
+        print('WARN: No Topological with mRID={} found in cim topology, ACLineSegment name={} will be not added to cim topology!'.format(mRID_node2, name))
 
-    cim_topologie['topology'] = res
+    cim_topology['topology'] = res
 
-    return cim_topologie
+    return cim_topology
 
 
-def add_Terminal(cim_topologie, version, TopologicalNode, ConductingEquipment, pInjection = 0, qInjection = 0, mRID = ''):
-    res = cim_topologie['topology']
+def add_Terminal(cim_topology, version, TopologicalNode, ConductingEquipment, pInjection = 0, qInjection = 0, mRID = ''):
+    res = cim_topology['topology']
     
     if mRID == "":
         mRID = str(uuid.uuid4())
@@ -284,17 +286,17 @@ def add_Terminal(cim_topologie, version, TopologicalNode, ConductingEquipment, p
                                 pInjection= pInjection,
                                 qInjection= qInjection)
 
-    cim_topologie['topology'] = res
+    cim_topology['topology'] = res
 
-    return cim_topologie
+    return cim_topology
         
-def add_TopologicalNode(cim_topologie, version, name, mRID="", baseVoltage=0, v=0.0, angle=0.0):		
+def add_TopologicalNode(cim_topology, version, name, mRID="", baseVoltage=0, v=0.0, angle=0.0):		
   
-    res = cim_topologie['topology']
+    res = cim_topology['topology']
     
     if mRID in res:
         print("mRID", mRID, "is already included")
-        return cim_topologie
+        return cim_topology
 
     # Creating random mRID using uuid4()
     if mRID == "":
@@ -321,11 +323,11 @@ def add_TopologicalNode(cim_topologie, version, name, mRID="", baseVoltage=0, v=
                                             TopologicalNode=res[mRID])
         res[mRID].SvVoltage = res[SvVoltage_name]
     
-    cim_topologie['topology'] = res
-    return cim_topologie
+    cim_topology['topology'] = res
+    return cim_topology
 
     
-def add_SynchronousMachine(cim_topologie, version, name, mRID_node="", node_name="", mRID="", ratedS=0, ratedU=0, p=0, q=0, targetValue=0, initialP=0):          
+def add_SynchronousMachine(cim_topology, version, name, mRID_node="", node_name="", mRID="", ratedS=0, ratedU=0, p=0, q=0, targetValue=0, initialP=0):          
     """
     #TODO: baseVoltage?
     Function to add synchronous machine to existing cim topology
@@ -334,7 +336,7 @@ def add_SynchronousMachine(cim_topologie, version, name, mRID_node="", node_name
 
     Parameters
     ----------
-    cim_topologie : dict
+    cim_topology : dict
         existing cim topology
     version : str
         cgmes version. Actually only version 2.4.15 is supported
@@ -366,28 +368,27 @@ def add_SynchronousMachine(cim_topologie, version, name, mRID_node="", node_name
         
     # TODO: RotatingMachine without paramameters?
     
-    res = cim_topologie['topology']
+    res = cim_topology['topology']
 
     if mRID in res:
         print('WARN: Synchronous Machine mRID="{}" is already included in the cim topology, object will be not be addd to cim topology"', mRID)
-        return cim_topologie
+        return cim_topology
     
     # Creating random mRID using uuid4()
     if mRID == "":
         mRID = str(uuid.uuid4())
                 
-    if (node_name!="" and mRID_node==""):
+    if (mRID_node==""):
         for uuid_, obj in res.items():
             if isinstance(obj, cimpy.cgmes_v2_4_15.TopologicalNode):
                 if (obj.name==node_name):
                     mRID_node=uuid_
-                    
+                  
     TopologicalNode = None
-    if mRID in res:
-        if 'TopologicalNode' in str(type(res[mRID])):
-            TopologicalNode = res[mRID]
-        elif 'ConnectivityNode' in str(type(res[mRID])):
-            TopologicalNode = res[mRID].TopologicalNode.mRID
+    if 'TopologicalNode' in str(type(res[mRID_node])):
+        TopologicalNode = res[mRID_node]
+    elif 'ConnectivityNode' in str(type(res[mRID_node])):
+        TopologicalNode = res[mRID_node].TopologicalNode.mRID
 
     if TopologicalNode is not None:
         
@@ -422,7 +423,7 @@ def add_SynchronousMachine(cim_topologie, version, name, mRID_node="", node_name
         # create Synchronous machine object
         SynchronousMachine_module = importlib.import_module((module_name + 'SynchronousMachine'))
         SynchronousMachine_class = getattr(SynchronousMachine_module, 'SynchronousMachine')
-        res[name] = SynchronousMachine_class(mRID=mRID,
+        res[mRID] = SynchronousMachine_class(mRID=mRID,
                                             name=name,
                                             p=p,
                                             q=q,
@@ -438,14 +439,14 @@ def add_SynchronousMachine(cim_topologie, version, name, mRID_node="", node_name
         # Append the Terminal to the terminals list of the TopologicalNode
         res[mRID_node].Terminal.append(res[terminal_mRID])
         
-        cim_topologie['topology'] = res
-        return cim_topologie
+        cim_topology['topology'] = res
+        return cim_topology
 
     else:
-        print('WARN: No Topological with mRID "{}" found in cim topology, Synchronous Machine name="{}" will be not added to cim topology!', mRID_node, name)
-        return cim_topologie
+        print('WARN: No Topological with mRID={} found in cim topology, Synchronous Machine name={} will be not added to cim topology!'.format(mRID_node, name))
+        return cim_topology
 
-def extend_SynchronousMachineTimeConstantReactance(cim_topologie, version, name="", mRID="", SynchronousMachine_mRID="", 
+def extend_SynchronousMachineTimeConstantReactance(cim_topology, version, name="", mRID="", SynchronousMachine_mRID="", 
                                                    damping=0, inertia=0, statorResistance=0, statorLeakageReactance=0, 
                                                    tpdo=0, tpqo=0, tppdo=0, tppqo=0, xDirectSubtrans=0, xDirectSync=0, 
                                                    xDirectTrans=0, xQuadSubtrans=0, xQuadSync=0, xQuadTrans=0):
@@ -456,7 +457,7 @@ def extend_SynchronousMachineTimeConstantReactance(cim_topologie, version, name=
 
     Parameters
     ----------
-    cim_topologie : dict
+    cim_topology : dict
         existing cim topology
     version : str
         cgmes version. Actually only version 2.4.15 is supported
@@ -473,19 +474,19 @@ def extend_SynchronousMachineTimeConstantReactance(cim_topologie, version, name=
     dict containing the modified cim topology
     """
     
-    res = cim_topologie['topology']
+    res = cim_topology['topology']
     
     if mRID in res:
-        print('WARN: SynchronousMachineTimeConstantReactance mRID="{}" is already included in the cim topology, object will be not be addd to cim topology"', mRID)
-        return cim_topologie
+        print('WARN: SynchronousMachineTimeConstantReactance mRID="{}" is already included in the cim topology, object will be not be addd to cim topology"'.format(mRID))
+        return cim_topology
     
     # search for the synchonous machine
     synchronous_machine = None
     if SynchronousMachine_mRID in res.keys():
         synchronous_machine = res[SynchronousMachine_mRID]
     else:
-        print('WARN: SynchronousMachine mRID="{}" coud not be found in the cim topology, object of type SynchronousMachineTimeConstantReactance will be not addd to cim topology"', SynchronousMachine_mRID)
-        return cim_topologie
+        print('WARN: SynchronousMachine mRID={} coud not be found in the cim topology, object of type SynchronousMachineTimeConstantReactance will be not addd to cim topology'.format(SynchronousMachine_mRID))
+        return cim_topology
     
     if name == "":
         name = synchronous_machine.name + "_TimeConstantReactance"
@@ -518,12 +519,12 @@ def extend_SynchronousMachineTimeConstantReactance(cim_topologie, version, name=
     # TODO: Add <cim:SynchronousMachineTimeConstantReactance.modelType rdf:resource="http://iec.ch/TC57/2013/CIM-schema-cim16#SynchronousMachineModelKind.subtransient" />
     # TODO: Add <cim:SynchronousMachineTimeConstantReactance.rotorType rdf:resource="http://iec.ch/TC57/2013/CIM-schema-cim16#RotorKind.salientPole" 
     
-    cim_topologie['topology'] = res
+    cim_topology['topology'] = res
 
-    return cim_topologie
+    return cim_topology
 
 
-def add_EnergyConsumer(cim_topologie, version, name, mRID="", mRID_node="", node_name="", p_nom=0, q_nom=0, 
+def add_EnergyConsumer(cim_topology, version, name, mRID="", mRID_node="", node_name="", p_nom=0, q_nom=0, 
                         p_init=0, q_init=0, baseVoltage=""):
     """
     Function to add element of type SynchronousMachineTimeConstantReactance to existing cim topology
@@ -532,7 +533,7 @@ def add_EnergyConsumer(cim_topologie, version, name, mRID="", mRID_node="", node
 
     Parameters
     ----------
-    cim_topologie : dict
+    cim_topology : dict
         existing cim topology
     version : str
         cgmes version. Actually only version 2.4.15 is supported
@@ -560,12 +561,12 @@ def add_EnergyConsumer(cim_topologie, version, name, mRID="", mRID_node="", node
     dict containing the modified cim topology
     """
     
-    res = cim_topologie['topology']
+    res = cim_topology['topology']
     TopologicalNode = ''
     
     if mRID in res:
-        print('WARN: EnergyConsumer mRID="{}" is already included in the cim topology, object will be not be addd to cim topology"', mRID)
-        return cim_topologie
+        print('WARN: EnergyConsumer mRID={} is already included in the cim topology, object will be not be addd to cim topology'.format(mRID))
+        return cim_topology
     
     if mRID == "":
         mRID = str(uuid.uuid4())
@@ -619,15 +620,15 @@ def add_EnergyConsumer(cim_topologie, version, name, mRID="", mRID_node="", node
         # Append the Terminal to the terminals list of the TopologicalNode
         res[mRID_node].Terminal.append(res[terminal_mRID])
    
-        cim_topologie['topology'] = res
-        return cim_topologie    
+        cim_topology['topology'] = res
+        return cim_topology    
     else:
-        print('WARN: TopologicalNode mRID="{}" coud not be found in the cim topology, object of type EnergyConsumer will be not addd to cim topology"', mRID_node)
+        print('WARN: TopologicalNode mRID={} coud not be found in the cim topology, object of type EnergyConsumer will be not addd to cim topology'.format(mRID_node))
         
-        return cim_topologie
+        return cim_topology
 
 
-def add_PowerTransfomer(cim_topologie, version, name, mRID="", mRID_node1="", node1_name="", mRID_node2="", node2_name="", r=0, x=0, nominal_voltage_end1=0, nominal_voltage_end2=0):
+def add_PowerTransfomer(cim_topology, version, name, mRID="", mRID_node1="", node1_name="", mRID_node2="", node2_name="", r=0, x=0, nominal_voltage_end1=0, nominal_voltage_end2=0):
     """
     Function to add PowerTransfomer objects to existing cim topology
 
@@ -635,7 +636,7 @@ def add_PowerTransfomer(cim_topologie, version, name, mRID="", mRID_node1="", no
 
     Parameters
     ----------
-    cim_topologie : dict
+    cim_topology : dict
         existing cim topology
     version : str
         cgmes version. Actually only version 2.4.15 is supported
@@ -668,11 +669,11 @@ def add_PowerTransfomer(cim_topologie, version, name, mRID="", mRID_node1="", no
     dict containing the modified cim topology
     """
     
-    res = cim_topologie['topology']
+    res = cim_topology['topology']
     
     if name in res:
         print('WARN: PowerTransformer mRID="{}" is already included in the cim topology, object will be not be addd to cim topology"', mRID)
-        return cim_topologie
+        return cim_topology
 
     # Creating random mRID using uuid4()
     if mRID == "":
@@ -680,12 +681,14 @@ def add_PowerTransfomer(cim_topologie, version, name, mRID="", mRID_node1="", no
         
     if (node1_name!="" and mRID_node1==""):
         for uuid_, obj in res.items():
-            if (obj.name==node1_name):
-                mRID_node1=uuid_
+            if hasattr(obj, 'name'):
+                if (obj.name==node1_name):
+                    mRID_node1=uuid_
     if (node2_name!="" and mRID_node2==""):
         for uuid_, obj in res.items():
-            if (obj.name==node2_name):
-                mRID_node2=uuid_
+            if hasattr(obj, 'name'):
+                if (obj.name==node2_name):
+                    mRID_node2=uuid_
     
     # look for topological nodels connected to line            
     TopologicalNode1 = None
@@ -731,7 +734,7 @@ def add_PowerTransfomer(cim_topologie, version, name, mRID="", mRID_node1="", no
         # create PowerTransformerEnd objects
         End1_mRID = str(uuid.uuid4())
         PowerTransformerEnd_module = importlib.import_module((module_name + 'PowerTransformerEnd'))
-        PowerTransformerEnd_class = getattr(PowerTransformerEnd_module, 'PowerTransformer')
+        PowerTransformerEnd_class = getattr(PowerTransformerEnd_module, 'PowerTransformerEnd')
         res[End1_mRID] = PowerTransformerEnd_class(mRID=End1_mRID,
                                                    name=name+"1",
                                                    ratedU=nominal_voltage_end1,
@@ -739,36 +742,36 @@ def add_PowerTransfomer(cim_topologie, version, name, mRID="", mRID_node1="", no
                                                    x=x,
                                                    endNumber=1,
                                                    Terminal=res[terminal1_mRID],
-                                                   PowerTransformer=res[name])
+                                                   PowerTransformer=res[mRID])
         End2_mRID = str(uuid.uuid4())
         res[End2_mRID] = PowerTransformerEnd_class(mRID=End2_mRID,
                                                    name=name+"2",
                                                    ratedU=nominal_voltage_end2,
                                                    endNumber=2,
                                                    Terminal=res[terminal2_mRID],
-                                                   PowerTransformer=res[name])
+                                                   PowerTransformer=res[mRID])
         
         res[mRID].PowerTransformerEnd = [res[End1_mRID], res[End2_mRID]]
 
-        res[terminal1_mRID].ConductingEquipment = res[name]
-        res[terminal2_mRID].ConductingEquipment = res[name]
+        res[terminal1_mRID].ConductingEquipment = res[mRID]
+        res[terminal2_mRID].ConductingEquipment = res[mRID]
    
         # Append the Terminal List of the TopologicalNodes
         res[mRID_node1].Terminal.append(res[terminal1_mRID])
         res[mRID_node2].Terminal.append(res[terminal2_mRID])
         
-        cim_topologie['topology'] = res
+        cim_topology['topology'] = res
 
     elif TopologicalNode1 is None:
-        print('WARN: No Topological with mRID "{}" found in cim topology, PowerTransformer name="{}" will be not added to cim topology!', mRID_node1, name)
+        print('WARN: No Topological with mRID={} found in cim topology, PowerTransformer name={} will be not added to cim topology!'.format(mRID_node1, name))
         
     if TopologicalNode2 is None:
-        print('WARN: No Topological with mRID "{}" found in cim topology, PowerTransformer name="{}" will be not added to cim topology!', mRID_node2, name)
+        print('WARN: No Topological with mRID={} found in cim topology, PowerTransformer name={} will be not added to cim topology!'.format(mRID_node2, name))
 
-    return cim_topologie
+    return cim_topology
 
 
-def create_BaseVoltage(cim_topologie, nominalVoltage):
+def create_BaseVoltage(cim_topology, nominalVoltage):
     """
     Function to add element of type BaseVoltage to existing cim topology
 
@@ -776,7 +779,7 @@ def create_BaseVoltage(cim_topologie, nominalVoltage):
 
     Parameters
     ----------
-    cim_topologie : dict
+    cim_topology : dict
         existing cim topology
     version : str
         cgmes version. Actually only version 2.4.15 is supported
@@ -788,11 +791,11 @@ def create_BaseVoltage(cim_topologie, nominalVoltage):
     ------- 
     mRID:
         str containing the mRID of the BaseVoltage
-    cim_topologie:
+    cim_topology:
         dict containing the modified cim topology
     """
     # check if this voltage already exists in the topoplogy
-    for mRID, obj in cim_topologie.items():
+    for mRID, obj in cim_topology.items():
         if isinstance(obj, cimpy.cgmes_v2_4_15.BaseVoltage):
             if (obj.nominalVoltage == nominalVoltage):
                 return mRID
@@ -807,7 +810,7 @@ def create_BaseVoltage(cim_topologie, nominalVoltage):
     BaseVoltage = BaseVoltage_class(name=name, 
                                     mRID=mRID,
                                     nominalVoltage=nominalVoltage)
-    cim_topologie[mRID] = BaseVoltage
+    cim_topology[mRID] = BaseVoltage
 
     return BaseVoltage
 
