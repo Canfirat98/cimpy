@@ -142,7 +142,7 @@ def DPsimToCIMpy(DPsim_system_PF, DPsim_simulation, DPsim_system_dyn=None, frequ
             logging.debug('Added Transformer: \n\tname={}, \n\tr={}[Ohm], \n\tx={}[Ohm], \n\tbaseVoltage={}[kV], \n\tnode1 name={}, \n\tnode2 name={}'.format(
                             comp.name, r, x, base_voltage, node1_name, node2_name))
     
-        elif "SynchronGenerator":
+        elif "SynchronGenerator" in str(type(comp)):
             p = unitValue(comp.get_apparent_power().real, Multiplier.micro)
             q = unitValue(comp.get_apparent_power().imag, Multiplier.micro)
             # TODO: THIS VALUE IS NOT THE BASE POWER
